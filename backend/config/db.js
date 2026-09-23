@@ -10,15 +10,19 @@ dotenv.config({
   path: path.resolve(__dirname, "../../.env"),
 });
 
-console.log("DB USER:", process.env.DB_USER);
-console.log("DB NAME:", process.env.DB_NAME);
-
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT || 3306),
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  user: process.env.MYSQLUSER || process.env.DB_USER || "root",
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+  database:
+    process.env.MYSQL_DATABASE ||
+    process.env.MYSQLDATABASE ||
+    process.env.DB_NAME,
+  port: Number(
+    process.env.MYSQLPORT ||
+    process.env.DB_PORT ||
+    3306
+  ),
 });
 
 const nativeQuery = db.query.bind(db);
