@@ -1,0 +1,43 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  background: transparent;
+}
+
+.main {
+  margin-left: 235px;
+  min-height: 100vh;
+  width: calc(100% - 235px);
+  background: transparent;
+}
+
+.content {
+  padding: 28px clamp(18px, 3vw, 34px) 42px;
+}
+
+.content h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 26px;
+  letter-spacing: 0;
+  font-weight: 750;
+}
+
+.content p {
+  color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .app {
+    display: block;
+  }
+
+  .main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .content {
+    padding: 22px 18px 34px;
+  }
+}

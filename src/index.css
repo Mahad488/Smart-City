@@ -1,0 +1,130 @@
+:root {
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-ui: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ink: #17324d;
+  --muted: #71859a;
+  --line: #e4edf5;
+  --surface: #ffffff;
+  --brand: #147de1;
+  --brand-dark: #0d5eaf;
+  --page: #f4f8fc;
+  --soft-shadow: 0 8px 24px rgba(25, 65, 99, 0.07);
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1d3557;
+  background: #f4f8fc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #147de1 !important;
+}
+
+/* Preserve contrast on dark navigation and colored hero sections. */
+.sidebar h1,
+.sidebar h2,
+.sidebar h3,
+.sidebar h4,
+.sidebar h5,
+.sidebar h6 {
+  color: #ffffff !important;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(circle at top left, rgba(39, 126, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #f7fbff 0%, #f1f6fb 100%);
+  color: #1d3557;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(20, 125, 225, 0.22);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(20, 125, 225, 0.2);
+  color: #102a43;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  text-align: left;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #edf4fb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c6d7ec;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aac1de;
+}
+
