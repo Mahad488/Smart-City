@@ -360,3 +360,5 @@ ADD COLUMN citizen_id VARCHAR(20) NULL;
 
 ALTER TABLE emergencies
 ADD COLUMN citizen_id VARCHAR(20) NULL;
+
+SHOW CREATE TABLE admins;
