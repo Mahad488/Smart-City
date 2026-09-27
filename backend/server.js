@@ -24,7 +24,7 @@ const __dirname = path.dirname(__filename);
 // Local development ke liye .env load karega.
 // Vercel par Environment Variables automatically available hoti hain.
 dotenv.config({
-  path: path.resolve(__dirname, "../.env"),
+  path: path.resolve(__dirname, ".env"),
 });
 
 const app = express();

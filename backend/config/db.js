@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({
-  path: path.resolve(__dirname, "../../.env"),
+  path: path.resolve(__dirname, "../.env"),
 });
 
 // Connection Pool use karein jo automatic reconnect karta hai
@@ -47,7 +47,16 @@ pool.query = (...args) => {
 
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error("MySQL connection failed:", err.message);
+    console.error("MySQL connection failed:", err);
+    console.error("Config used:", {
+      host: process.env.MYSQLHOST || process.env.DB_HOST,
+      user: process.env.MYSQLUSER || process.env.DB_USER,
+      database:
+        process.env.MYSQL_DATABASE ||
+        process.env.MYSQLDATABASE ||
+        process.env.DB_NAME,
+      port: process.env.MYSQLPORT || process.env.DB_PORT,
+    });
     return;
   }
   console.log("MySQL connected successfully via pool!");
