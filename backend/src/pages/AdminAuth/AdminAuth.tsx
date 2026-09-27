@@ -43,12 +43,12 @@ function AdminAuth() {
         throw new Error(data.message || "Admin login failed");
       }
 
-      if (!data.admin) {
+      if (!data.admin || !(Number(data.admin.id) > 0)) {
         throw new Error("Admin information was not returned by the server");
       }
 
       localStorage.setItem("admin", JSON.stringify(data.admin));
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Admin login error:", error);
       setMessage(

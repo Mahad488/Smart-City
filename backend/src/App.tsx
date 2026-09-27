@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
@@ -47,15 +47,45 @@ function AdminLayout() {
   );
 }
 
+function hasAdminSession() {
+  try {
+    const admin = JSON.parse(localStorage.getItem("admin") || "null") as {
+      id?: number | string;
+    } | null;
+
+    return Boolean(admin && Number(admin.id) > 0);
+  } catch {
+    return false;
+  }
+}
+
+function AdminRoute() {
+  if (!hasAdminSession()) {
+    localStorage.removeItem("admin");
+    return <Navigate to="/admin-login" replace />;
+  }
+
+  return <AdminLayout />;
+}
+
+function AdminLoginRoute() {
+  if (hasAdminSession()) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <AdminAuth />;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
         <Routes>
-          <Route path="/admin-login" element={<AdminAuth />} />
+          <Route path="/" element={<AdminAuth />} />
+          <Route path="/admin-login" element={<AdminLoginRoute />} />
           <Route path="/citizen-login" element={<CitizenAuth />} />
           <Route path="/citizen-portal" element={<CitizenPortal />} />
-          <Route path="*" element={<AdminLayout />} />
+          <Route path="*" element={<AdminRoute />} />
         </Routes>
       </ToastProvider>
     </BrowserRouter>
