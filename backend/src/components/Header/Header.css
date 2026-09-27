@@ -295,14 +295,42 @@
 @media (max-width: 700px) {
   .header {
     gap: 12px;
+    padding: 0 12px;
   }
 
   .header-search {
-    width: min(300px, 48vw);
+    width: min(300px, 52vw);
   }
 
   .admin-profile-info,
   .header-divider {
     display: none;
+  }
+
+  .header-right {
+    gap: 6px;
+  }
+
+  .notification-dropdown {
+    position: fixed;
+    top: 74px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .admin-dropdown {
+    right: 0;
+    width: min(250px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 420px) {
+  .header-search {
+    width: 44vw;
+  }
+
+  .header-search input {
+    font-size: 12px;
   }
 }

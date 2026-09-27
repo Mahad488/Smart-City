@@ -41,3 +41,13 @@
     padding: 22px 18px 34px;
   }
 }
+
+@media (max-width: 600px) {
+  .content {
+    padding: 16px 12px 28px;
+  }
+
+  .content h1 {
+    font-size: 22px;
+  }
+}
