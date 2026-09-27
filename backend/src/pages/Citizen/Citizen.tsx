@@ -59,7 +59,7 @@ function Citizen() {
   const fetchCitizens = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens"
+        "smart-city-production-c48b.up.railway.app/api/citizens"
       );
 
       if (!response.ok) {
@@ -81,7 +81,7 @@ function Citizen() {
   const fetchCitizenStats = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/stats/summary"
+        "smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
       );
 
       if (!response.ok) {
@@ -127,7 +127,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/${id}/activate`,
+        `smart-city-production-c48b.up.railway.app/api/citizens/${id}/activate`,
         {
           method: "PUT",
         }
@@ -168,7 +168,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/${id}/deactivate`,
+        `smart-city-production-c48b.up.railway.app/api/citizens/${id}/deactivate`,
         {
           method: "PUT",
         }
@@ -213,7 +213,7 @@ function Citizen() {
       setActionLoading(deleteCitizen.id);
 
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/${deleteCitizen.id}`,
+        `smart-city-production-c48b.up.railway.app/api/citizens/${deleteCitizen.id}`,
         {
           method: "DELETE",
         }

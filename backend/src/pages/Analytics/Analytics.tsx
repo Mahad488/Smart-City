@@ -94,7 +94,7 @@ const Analytics: React.FC = () => {
 
         const params = new URLSearchParams({ period });
         const response = await fetch(
-          `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/analytics?${params.toString()}`
+          `smart-city-production-c48b.up.railway.app/api/analytics?${params.toString()}`
         );
 
         if (!response.ok) {

@@ -41,7 +41,7 @@ function Header() {
   const fetchNotifications = useCallback(async () => {
     try {
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/notifications"
+        "smart-city-production-c48b.up.railway.app/api/notifications"
       );
 
       if (!response.ok) {
@@ -78,7 +78,7 @@ function Header() {
   const markAsRead = async (id: number) => {
     try {
       await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/notifications/${id}/read`,
+        `smart-city-production-c48b.up.railway.app/api/notifications/${id}/read`,
         {
           method: "PUT",
         }
@@ -100,7 +100,7 @@ function Header() {
   const deleteNotification = async (id: number) => {
     try {
       await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/notifications/${id}`,
+        `smart-city-production-c48b.up.railway.app/api/notifications/${id}`,
         {
           method: "DELETE",
         }

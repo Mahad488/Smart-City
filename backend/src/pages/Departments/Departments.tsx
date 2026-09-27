@@ -82,7 +82,7 @@ const Departments: React.FC = () => {
       setLoading(true);
 
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/departments"
+        "smart-city-production-c48b.up.railway.app/api/departments"
       );
 
       if (!response.ok) {
@@ -107,7 +107,7 @@ const Departments: React.FC = () => {
         setLoading(true);
 
         const response = await fetch(
-          "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/departments"
+          "smart-city-production-c48b.up.railway.app/api/departments"
         );
 
         if (!response.ok) {
@@ -166,8 +166,8 @@ const Departments: React.FC = () => {
       setSaving(true);
 
       const url = isEditMode
-        ? `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/departments/${selectedDepartment.id}`
-        : "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/departments";
+        ? `smart-city-production-c48b.up.railway.app/api/departments/${selectedDepartment.id}`
+        : "smart-city-production-c48b.up.railway.app/api/departments";
 
       const response = await fetch(url, {
         method: isEditMode ? "PUT" : "POST",
@@ -222,7 +222,7 @@ const Departments: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/departments/${id}`,
+        `smart-city-production-c48b.up.railway.app/api/departments/${id}`,
         {
           method: "DELETE",
         }

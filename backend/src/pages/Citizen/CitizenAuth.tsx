@@ -38,7 +38,7 @@ function CitizenAuth() {
 
     try {
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/login",
+        "smart-city-production-c48b.up.railway.app/api/citizens/login",
         {
           method: "POST",
           headers: {
@@ -99,7 +99,7 @@ function CitizenAuth() {
 
     try {
       const response = await fetch(
-        "https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/citizens/register",
+        "smart-city-production-c48b.up.railway.app/api/citizens/register",
         {
           method: "POST",
           headers: {

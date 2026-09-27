@@ -100,7 +100,7 @@ const Assets: React.FC = () => {
 
   const fetchAssets = async () => {
     try {
-      const response = await fetch("https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/assets");
+      const response = await fetch("smart-city-production-c48b.up.railway.app/api/assets");
 
       if (!response.ok) {
         throw new Error("Failed to fetch assets");
@@ -129,7 +129,7 @@ const Assets: React.FC = () => {
 
     const loadAssets = async () => {
       try {
-        const response = await fetch("https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/assets");
+        const response = await fetch("smart-city-production-c48b.up.railway.app/api/assets");
 
         if (!response.ok) {
           throw new Error("Failed to fetch assets");
@@ -168,7 +168,7 @@ const Assets: React.FC = () => {
   const handleDeleteAsset = async (id: number | string) => {
     try {
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/assets/${id}`,
+        `smart-city-production-c48b.up.railway.app/api/assets/${id}`,
         {
           method: "DELETE",
         }
@@ -193,7 +193,7 @@ const Assets: React.FC = () => {
 
     try {
       const response = await fetch(
-        `https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/assets/${editingAsset.id}`,
+        `smart-city-production-c48b.up.railway.app/api/assets/${editingAsset.id}`,
         {
           method: "PUT",
           headers: {
@@ -227,7 +227,7 @@ const Assets: React.FC = () => {
 
   const handleAddAsset = async () => {
     try {
-      const response = await fetch("https://smart-city-backend-16ly-qaxrjy16l-m-92de.vercel.app/api/assets", {
+      const response = await fetch("smart-city-production-c48b.up.railway.app/api/assets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
