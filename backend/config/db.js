@@ -10,7 +10,8 @@ dotenv.config({
   path: path.resolve(__dirname, "../../.env"),
 });
 
-const db = mysql.createConnection({
+// Connection Pool use karein jo automatic reconnect karta hai
+const pool = mysql.createPool({
   host: process.env.MYSQLHOST || process.env.DB_HOST,
   user: process.env.MYSQLUSER || process.env.DB_USER || "root",
   password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
@@ -23,27 +24,29 @@ const db = mysql.createConnection({
     process.env.DB_PORT ||
     3306
   ),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-const nativeQuery = db.query.bind(db);
+const promisePool = pool.promise();
 
-db.query = (...args) => {
+// query method ko promise-based aur callback dono ke liye compatible banayein
+pool.query = (...args) => {
   const callback = args[args.length - 1];
-
   if (typeof callback === "function") {
-    return nativeQuery(...args);
+    return pool.query(...args);
   }
-
-  return db.promise().query(...args);
+  return promisePool.query(...args);
 };
 
-db.connect((err) => {
+pool.getConnection((err, connection) => {
   if (err) {
     console.error("MySQL connection failed:", err.message);
     return;
   }
-
-  console.log("MySQL connected successfully!");
+  console.log("MySQL connected successfully via pool!");
+  connection.release();
 });
 
-export default db;
+export default pool;
