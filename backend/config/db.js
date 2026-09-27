@@ -31,11 +31,16 @@ const pool = mysql.createPool({
 
 const promisePool = pool.promise();
 
+// IMPORTANT: keep a reference to the ORIGINAL query method
+// before we overwrite pool.query, or the callback branch below
+// will call itself forever and blow the call stack.
+const originalQuery = pool.query.bind(pool);
+
 // query method ko promise-based aur callback dono ke liye compatible banayein
 pool.query = (...args) => {
   const callback = args[args.length - 1];
   if (typeof callback === "function") {
-    return pool.query(...args);
+    return originalQuery(...args); // call the real mysql2 method, not pool.query
   }
   return promisePool.query(...args);
 };
