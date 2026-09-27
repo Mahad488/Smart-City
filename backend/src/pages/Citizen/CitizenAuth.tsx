@@ -38,7 +38,7 @@ function CitizenAuth() {
 
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/citizens/login",
+        "https://smart-city-production-c48b.up.railway.app/api/citizens/login",
         {
           method: "POST",
           headers: {
@@ -99,7 +99,7 @@ function CitizenAuth() {
 
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/citizens/register",
+        "https://smart-city-production-c48b.up.railway.app/api/citizens/register",
         {
           method: "POST",
           headers: {

@@ -82,7 +82,7 @@ const Departments: React.FC = () => {
       setLoading(true);
 
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/departments"
+        "https://smart-city-production-c48b.up.railway.app/api/departments"
       );
 
       if (!response.ok) {
@@ -107,7 +107,7 @@ const Departments: React.FC = () => {
         setLoading(true);
 
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/departments"
+          "https://smart-city-production-c48b.up.railway.app/api/departments"
         );
 
         if (!response.ok) {
@@ -166,8 +166,8 @@ const Departments: React.FC = () => {
       setSaving(true);
 
       const url = isEditMode
-        ? `smart-city-production-c48b.up.railway.app/api/departments/${selectedDepartment.id}`
-        : "smart-city-production-c48b.up.railway.app/api/departments";
+        ? `https://smart-city-production-c48b.up.railway.app/api/departments/${selectedDepartment.id}`
+        : "https://smart-city-production-c48b.up.railway.app/api/departments";
 
       const response = await fetch(url, {
         method: isEditMode ? "PUT" : "POST",
@@ -222,7 +222,7 @@ const Departments: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/departments/${id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/departments/${id}`,
         {
           method: "DELETE",
         }

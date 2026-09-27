@@ -29,7 +29,7 @@ function AdminAuth() {
       setLoading(true);
       setMessage("");
 
-      const response = await fetch("smart-city-production-c48b.up.railway.app/api/admin/login", {
+      const response = await fetch("https://smart-city-production-c48b.up.railway.app/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

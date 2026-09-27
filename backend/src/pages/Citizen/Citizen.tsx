@@ -59,7 +59,7 @@ function Citizen() {
   const fetchCitizens = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/citizens"
+        "https://smart-city-production-c48b.up.railway.app/api/citizens"
       );
 
       if (!response.ok) {
@@ -81,7 +81,7 @@ function Citizen() {
   const fetchCitizenStats = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
+        "https://smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
       );
 
       if (!response.ok) {
@@ -127,7 +127,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/citizens/${id}/activate`,
+        `https://smart-city-production-c48b.up.railway.app/api/citizens/${id}/activate`,
         {
           method: "PUT",
         }
@@ -168,7 +168,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/citizens/${id}/deactivate`,
+        `https://smart-city-production-c48b.up.railway.app/api/citizens/${id}/deactivate`,
         {
           method: "PUT",
         }
@@ -213,7 +213,7 @@ function Citizen() {
       setActionLoading(deleteCitizen.id);
 
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/citizens/${deleteCitizen.id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/citizens/${deleteCitizen.id}`,
         {
           method: "DELETE",
         }

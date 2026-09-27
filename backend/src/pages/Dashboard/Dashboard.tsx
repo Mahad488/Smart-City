@@ -198,7 +198,7 @@ function Dashboard() {
     const fetchDashboardStats = async () => {
       try {
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/dashboard/stats"
+          "https://smart-city-production-c48b.up.railway.app/api/dashboard/stats"
         );
 
         if (!response.ok) {
@@ -222,7 +222,7 @@ function Dashboard() {
     const fetchCitizenStats = async () => {
       try {
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
+          "https://smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
         );
 
         if (!response.ok) {
@@ -249,7 +249,7 @@ function Dashboard() {
     const fetchComplaintCategories = async () => {
       try {
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/dashboard/complaint-categories"
+          "https://smart-city-production-c48b.up.railway.app/api/dashboard/complaint-categories"
         );
 
         if (!response.ok) {
@@ -272,7 +272,7 @@ function Dashboard() {
     const fetchDepartmentPerformance = async () => {
       try {
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/dashboard/department-performance"
+          "https://smart-city-production-c48b.up.railway.app/api/dashboard/department-performance"
         );
 
         if (!response.ok) {
@@ -294,7 +294,7 @@ function Dashboard() {
     const fetchServiceRequests = async () => {
       try {
         const response = await fetch(
-          "smart-city-production-c48b.up.railway.app/api/dashboard/service-requests"
+          "https://smart-city-production-c48b.up.railway.app/api/dashboard/service-requests"
         );
 
         if (!response.ok) {
@@ -324,8 +324,8 @@ function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const [activitiesRes, emergenciesRes] = await Promise.all([
-          fetch("smart-city-production-c48b.up.railway.app/api/dashboard/activities"),
-          fetch("smart-city-production-c48b.up.railway.app/api/dashboard/emergency-alerts"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/dashboard/activities"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/dashboard/emergency-alerts"),
         ]);
 
         if (!activitiesRes.ok) {
@@ -353,9 +353,9 @@ function Dashboard() {
     const fetchMapData = async () => {
       try {
         const [departmentsRes, assetsRes, emergenciesRes] = await Promise.all([
-          fetch("smart-city-production-c48b.up.railway.app/api/departments"),
-          fetch("smart-city-production-c48b.up.railway.app/api/assets"),
-          fetch("smart-city-production-c48b.up.railway.app/api/emergencies"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/departments"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/assets"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/emergencies"),
         ]);
 
         if (!departmentsRes.ok) {

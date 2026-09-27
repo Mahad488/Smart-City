@@ -247,10 +247,10 @@ const GIS: React.FC = () => {
           emergenciesRes,
           complaintsRes,
         ] = await Promise.all([
-          fetch("smart-city-production-c48b.up.railway.app/api/departments"),
-          fetch("smart-city-production-c48b.up.railway.app/api/assets"),
-          fetch("smart-city-production-c48b.up.railway.app/api/emergencies"),
-          fetch("smart-city-production-c48b.up.railway.app/api/complaints"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/departments"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/assets"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/emergencies"),
+          fetch("https://smart-city-production-c48b.up.railway.app/api/complaints"),
         ]);
 
         if (!departmentsRes.ok) {
@@ -395,7 +395,7 @@ const GIS: React.FC = () => {
 
         try {
           const response = await fetch(
-            `smart-city-production-c48b.up.railway.app/api/gis/nearby?lat=${lat}&lng=${lng}&radius=5`
+            `https://smart-city-production-c48b.up.railway.app/api/gis/nearby?lat=${lat}&lng=${lng}&radius=5`
           );
 
           if (!response.ok) {

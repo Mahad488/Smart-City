@@ -57,7 +57,7 @@ const Emergency: React.FC = () => {
       setLoading(true);
 
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/emergencies/"
+        "https://smart-city-production-c48b.up.railway.app/api/emergencies/"
       );
 
       if (!response.ok) {
@@ -77,7 +77,7 @@ const Emergency: React.FC = () => {
   const handleAddEmergency = async () => {
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/emergencies/",
+        "https://smart-city-production-c48b.up.railway.app/api/emergencies/",
         {
           method: "POST",
           headers: {
@@ -113,7 +113,7 @@ const Emergency: React.FC = () => {
 
     try {
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/emergencies/${editingEmergency.id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/emergencies/${editingEmergency.id}`,
         {
           method: "PUT",
           headers: {
@@ -146,7 +146,7 @@ const Emergency: React.FC = () => {
   const handleDeleteEmergency = async (id: number) => {
     try {
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/emergencies/${id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/emergencies/${id}`,
         {
           method: "DELETE",
         }

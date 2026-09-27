@@ -125,12 +125,12 @@ function CitizenPortal() {
 
       const [complaintsResponse, emergenciesResponse] = await Promise.all([
         fetch(
-          `smart-city-production-c48b.up.railway.app/api/complaints/citizen/${encodeURIComponent(
+          `https://smart-city-production-c48b.up.railway.app/api/complaints/citizen/${encodeURIComponent(
             citizenId
           )}`
         ),
         fetch(
-          `smart-city-production-c48b.up.railway.app/api/emergency/citizen/${encodeURIComponent(
+          `https://smart-city-production-c48b.up.railway.app/api/emergency/citizen/${encodeURIComponent(
             citizenId
           )}`
         ),
@@ -171,8 +171,8 @@ function CitizenPortal() {
 
       const baseUrl =
         deleteTarget.type === "complaint"
-          ? "smart-city-production-c48b.up.railway.app/api/complaints"
-          : "smart-city-production-c48b.up.railway.app/api/emergency";
+          ? "https://smart-city-production-c48b.up.railway.app/api/complaints"
+          : "https://smart-city-production-c48b.up.railway.app/api/emergency";
 
       const response = await fetch(`${baseUrl}/${deleteTarget.id}`, {
         method: "DELETE",
@@ -209,7 +209,7 @@ function CitizenPortal() {
       setActionLoading(true);
 
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/complaints/${editingComplaint.id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/complaints/${editingComplaint.id}`,
         {
           method: "PUT",
           headers: {
@@ -255,7 +255,7 @@ function CitizenPortal() {
       setActionLoading(true);
 
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/emergency/${editingEmergency.id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/emergency/${editingEmergency.id}`,
         {
           method: "PUT",
           headers: {
@@ -298,7 +298,7 @@ function CitizenPortal() {
       setNotificationLoading(true);
 
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/notifications"
+        "https://smart-city-production-c48b.up.railway.app/api/notifications"
       );
 
       if (!response.ok) {
@@ -373,7 +373,7 @@ function CitizenPortal() {
       setComplaintMessage("");
 
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/complaints/citizen",
+        "https://smart-city-production-c48b.up.railway.app/api/complaints/citizen",
         {
           method: "POST",
           headers: {
@@ -455,7 +455,7 @@ function CitizenPortal() {
       setEmergencyMessage("");
 
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/emergency",
+        "https://smart-city-production-c48b.up.railway.app/api/emergency",
         {
           method: "POST",
           headers: {

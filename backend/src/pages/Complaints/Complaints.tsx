@@ -62,7 +62,7 @@ const Complaints: React.FC = () => {
       setLoading(true);
       setError("");
 
-      const response = await fetch("smart-city-production-c48b.up.railway.app/api/complaints/");
+      const response = await fetch("https://smart-city-production-c48b.up.railway.app/api/complaints/");
 
       if (!response.ok) {
         throw new Error("Failed to fetch complaints");
@@ -166,7 +166,7 @@ const Complaints: React.FC = () => {
   const handleAddComplaint = async () => {
     try {
       const response = await fetch(
-        "smart-city-production-c48b.up.railway.app/api/complaints/",
+        "https://smart-city-production-c48b.up.railway.app/api/complaints/",
         {
           method: "POST",
           headers: {
@@ -207,7 +207,7 @@ const Complaints: React.FC = () => {
 
     try {
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/complaints/${editingComplaint.id}`,
+        `https://smart-city-production-c48b.up.railway.app/api/complaints/${editingComplaint.id}`,
         {
           method: "PUT",
           headers: {

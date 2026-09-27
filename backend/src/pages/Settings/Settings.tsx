@@ -105,9 +105,9 @@ const Settings: React.FC = () => {
 
         const [profileResponse, preferencesResponse, settingsResponse] =
           await Promise.all([
-            fetch(`smart-city-production-c48b.up.railway.app/api/admin/${savedAdminId}/profile`),
-            fetch("smart-city-production-c48b.up.railway.app/api/notification-preferences"),
-            fetch(`smart-city-production-c48b.up.railway.app/api/admin/${savedAdminId}/settings`),
+            fetch(`https://smart-city-production-c48b.up.railway.app/api/admin/${savedAdminId}/profile`),
+            fetch("https://smart-city-production-c48b.up.railway.app/api/notification-preferences"),
+            fetch(`https://smart-city-production-c48b.up.railway.app/api/admin/${savedAdminId}/settings`),
           ]);
 
         const profile = await readJsonResponse(profileResponse);
@@ -159,12 +159,12 @@ const Settings: React.FC = () => {
       const profileName = `${firstName} ${lastName}`.trim();
       const [profileResponse, preferencesResponse, settingsResponse] =
         await Promise.all([
-          fetch(`smart-city-production-c48b.up.railway.app/api/admin/${adminId}/profile`, {
+          fetch(`https://smart-city-production-c48b.up.railway.app/api/admin/${adminId}/profile`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: profileName, email, phone }),
           }),
-          fetch("smart-city-production-c48b.up.railway.app/api/notification-preferences", {
+          fetch("https://smart-city-production-c48b.up.railway.app/api/notification-preferences", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -174,7 +174,7 @@ const Settings: React.FC = () => {
               system_updates: systemUpdates,
             }),
           }),
-          fetch(`smart-city-production-c48b.up.railway.app/api/admin/${adminId}/settings`, {
+          fetch(`https://smart-city-production-c48b.up.railway.app/api/admin/${adminId}/settings`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -233,7 +233,7 @@ const Settings: React.FC = () => {
 
     try {
       const response = await fetch(
-        `smart-city-production-c48b.up.railway.app/api/admin/${adminId}/password`,
+        `https://smart-city-production-c48b.up.railway.app/api/admin/${adminId}/password`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

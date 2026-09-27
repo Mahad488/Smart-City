@@ -94,7 +94,7 @@ const Analytics: React.FC = () => {
 
         const params = new URLSearchParams({ period });
         const response = await fetch(
-          `smart-city-production-c48b.up.railway.app/api/analytics?${params.toString()}`
+          `https://smart-city-production-c48b.up.railway.app/api/analytics?${params.toString()}`
         );
 
         if (!response.ok) {
