@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import db from "./config/db.js";
 
@@ -239,5 +239,13 @@ app.use((error, req, res, next) => {
 | Vercel Express app ko function ke taur par handle karega.
 |
 */
+
+const port = Number(process.env.PORT || 5000);
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  app.listen(port, () => {
+    console.log(`Smart City backend running on http://localhost:${port}`);
+  });
+}
 
 export default app;
