@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Users,
-  Clock3,
   CheckCircle2,
   Search,
   Eye,
@@ -26,11 +25,12 @@ type CitizenRecord = {
   phone?: string;
   area?: string;
   registered_at?: string;
-  status?: "Active" | "Pending" | "Inactive";
+  status?: "Active" | "Inactive";
 };
 
 function Citizen() {
   const { showToast } = useToast();
+
   const [citizens, setCitizens] = useState<CitizenRecord[]>([]);
   const [search, setSearch] = useState("");
   const [areaFilter, setAreaFilter] = useState("All Areas");
@@ -48,9 +48,11 @@ function Citizen() {
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
-    pending: 0,
     inactive: 0,
   });
+
+  const API_BASE_URL =
+    "https://smart-city-production-c48b.up.railway.app/api/citizens";
 
   // ============================
   // FETCH CITIZENS
@@ -58,9 +60,7 @@ function Citizen() {
 
   const fetchCitizens = useCallback(async (): Promise<void> => {
     try {
-      const response = await fetch(
-        "https://smart-city-production-c48b.up.railway.app/api/citizens"
-      );
+      const response = await fetch(API_BASE_URL);
 
       if (!response.ok) {
         throw new Error("Failed to fetch citizens");
@@ -71,8 +71,10 @@ function Citizen() {
       setCitizens(data);
     } catch (error) {
       console.error("Error fetching citizens:", error);
+
+      showToast("Failed to load citizens.", "error");
     }
-  }, []);
+  }, [showToast]);
 
   // ============================
   // FETCH STATS
@@ -80,9 +82,7 @@ function Citizen() {
 
   const fetchCitizenStats = useCallback(async (): Promise<void> => {
     try {
-      const response = await fetch(
-        "https://smart-city-production-c48b.up.railway.app/api/citizens/stats/summary"
-      );
+      const response = await fetch(`${API_BASE_URL}/stats/summary`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch citizen statistics");
@@ -93,13 +93,14 @@ function Citizen() {
       setStats({
         total: Number(data.total) || 0,
         active: Number(data.active) || 0,
-        pending: Number(data.pending) || 0,
         inactive: Number(data.inactive) || 0,
       });
     } catch (error) {
       console.error("Error fetching citizen stats:", error);
+
+      showToast("Failed to load citizen statistics.", "error");
     }
-  }, []);
+  }, [showToast]);
 
   // ============================
   // REFRESH
@@ -119,7 +120,7 @@ function Citizen() {
   }, [fetchCitizens, fetchCitizenStats]);
 
   // ============================
-  // ACTIVATE / APPROVE
+  // ACTIVATE CITIZEN
   // ============================
 
   const activateCitizen = async (id: number) => {
@@ -127,7 +128,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `https://smart-city-production-c48b.up.railway.app/api/citizens/${id}/activate`,
+        `${API_BASE_URL}/${id}/activate`,
         {
           method: "PUT",
         }
@@ -147,11 +148,17 @@ function Citizen() {
         setSelectedCitizen(null);
       }
 
-      showToast("Citizen activated successfully.", "success");
+      showToast(
+        "Citizen activated successfully.",
+        "success"
+      );
     } catch (error) {
       console.error(error);
+
       showToast(
-        error instanceof Error ? error.message : "Failed to activate citizen",
+        error instanceof Error
+          ? error.message
+          : "Failed to activate citizen",
         "error"
       );
     } finally {
@@ -160,7 +167,7 @@ function Citizen() {
   };
 
   // ============================
-  // DEACTIVATE
+  // DEACTIVATE CITIZEN
   // ============================
 
   const deactivateCitizen = async (id: number) => {
@@ -168,7 +175,7 @@ function Citizen() {
       setActionLoading(id);
 
       const response = await fetch(
-        `https://smart-city-production-c48b.up.railway.app/api/citizens/${id}/deactivate`,
+        `${API_BASE_URL}/${id}/deactivate`,
         {
           method: "PUT",
         }
@@ -188,9 +195,13 @@ function Citizen() {
         setSelectedCitizen(null);
       }
 
-      showToast("Citizen deactivated successfully.", "success");
+      showToast(
+        "Citizen deactivated successfully.",
+        "success"
+      );
     } catch (error) {
       console.error(error);
+
       showToast(
         error instanceof Error
           ? error.message
@@ -203,7 +214,7 @@ function Citizen() {
   };
 
   // ============================
-  // DELETE
+  // DELETE CITIZEN
   // ============================
 
   const handleDeleteCitizen = async () => {
@@ -213,7 +224,7 @@ function Citizen() {
       setActionLoading(deleteCitizen.id);
 
       const response = await fetch(
-        `https://smart-city-production-c48b.up.railway.app/api/citizens/${deleteCitizen.id}`,
+        `${API_BASE_URL}/${deleteCitizen.id}`,
         {
           method: "DELETE",
         }
@@ -231,11 +242,18 @@ function Citizen() {
       setSelectedCitizen(null);
 
       await refreshData();
-      showToast("Citizen removed successfully.", "success");
+
+      showToast(
+        "Citizen removed successfully.",
+        "success"
+      );
     } catch (error) {
       console.error(error);
+
       showToast(
-        error instanceof Error ? error.message : "Failed to remove citizen",
+        error instanceof Error
+          ? error.message
+          : "Failed to remove citizen",
         "error"
       );
     } finally {
@@ -288,7 +306,7 @@ function Citizen() {
             <h1>Citizen Management</h1>
 
             <p>
-              Review registered citizens and manage portal access.
+              Manage registered citizens and control portal access.
             </p>
           </div>
 
@@ -302,7 +320,9 @@ function Citizen() {
               className={refreshing ? "spin" : ""}
             />
 
-            {refreshing ? "Refreshing..." : "Refresh"}
+            {refreshing
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         </div>
 
@@ -311,6 +331,8 @@ function Citizen() {
         ========================== */}
 
         <div className="citizen-stats">
+
+          {/* TOTAL */}
 
           <div className="citizen-stat blue">
             <div className="citizen-stat-icon">
@@ -324,9 +346,13 @@ function Citizen() {
                 {stats.total.toLocaleString()}
               </strong>
 
-              <small>Registered citizens</small>
+              <small>
+                Registered citizens
+              </small>
             </div>
           </div>
+
+          {/* ACTIVE */}
 
           <div className="citizen-stat green">
             <div className="citizen-stat-icon">
@@ -340,25 +366,13 @@ function Citizen() {
                 {stats.active.toLocaleString()}
               </strong>
 
-              <small>Portal access enabled</small>
+              <small>
+                Portal access enabled
+              </small>
             </div>
           </div>
 
-          <div className="citizen-stat purple">
-            <div className="citizen-stat-icon">
-              <Clock3 size={22} />
-            </div>
-
-            <div>
-              <span>Pending Citizens</span>
-
-              <strong>
-                {stats.pending.toLocaleString()}
-              </strong>
-
-              <small>Awaiting approval</small>
-            </div>
-          </div>
+          {/* INACTIVE */}
 
           <div className="citizen-stat orange">
             <div className="citizen-stat-icon">
@@ -372,7 +386,9 @@ function Citizen() {
                 {stats.inactive.toLocaleString()}
               </strong>
 
-              <small>Portal access disabled</small>
+              <small>
+                Portal access disabled
+              </small>
             </div>
           </div>
 
@@ -395,7 +411,9 @@ function Citizen() {
                 type="text"
                 placeholder="Search name, ID, email or phone..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
               />
             </div>
 
@@ -421,7 +439,6 @@ function Citizen() {
             >
               <option>All Status</option>
               <option>Active</option>
-              <option>Pending</option>
               <option>Inactive</option>
             </select>
 
@@ -476,8 +493,13 @@ function Citizen() {
                           </div>
 
                           <div>
-                            <strong>{citizen.name}</strong>
-                            <span>{citizen.email}</span>
+                            <strong>
+                              {citizen.name}
+                            </strong>
+
+                            <span>
+                              {citizen.email}
+                            </span>
                           </div>
 
                         </div>
@@ -551,9 +573,7 @@ function Citizen() {
                         </span>
                       </td>
 
-                      {/* =====================
-                          ACTIONS
-                      ====================== */}
+                      {/* ACTIONS */}
 
                       <td>
 
@@ -571,25 +591,7 @@ function Citizen() {
                             <Eye size={16} />
                           </button>
 
-                          {/* PENDING */}
-
-                          {citizen.status === "Pending" && (
-                            <button
-                              className="action-btn approve"
-                              title="Approve Citizen"
-                              disabled={
-                                actionLoading === citizen.id
-                              }
-                              onClick={() =>
-                                activateCitizen(citizen.id)
-                              }
-                            >
-                              <UserCheck size={16} />
-                              <span>Approve</span>
-                            </button>
-                          )}
-
-                          {/* ACTIVE */}
+                          {/* ACTIVE → DEACTIVATE */}
 
                           {citizen.status === "Active" && (
                             <button
@@ -605,11 +607,13 @@ function Citizen() {
                               }
                             >
                               <UserX size={16} />
-                              <span>Deactivate</span>
+                              <span>
+                                Deactivate
+                              </span>
                             </button>
                           )}
 
-                          {/* INACTIVE */}
+                          {/* INACTIVE → ACTIVATE */}
 
                           {citizen.status === "Inactive" && (
                             <button
@@ -619,11 +623,15 @@ function Citizen() {
                                 actionLoading === citizen.id
                               }
                               onClick={() =>
-                                activateCitizen(citizen.id)
+                                activateCitizen(
+                                  citizen.id
+                                )
                               }
                             >
                               <UserCheck size={16} />
-                              <span>Activate</span>
+                              <span>
+                                Activate
+                              </span>
                             </button>
                           )}
 
@@ -644,6 +652,7 @@ function Citizen() {
                       </td>
 
                     </tr>
+
                   ))
                 )}
 
@@ -658,7 +667,8 @@ function Citizen() {
           <div className="table-footer">
 
             <span>
-              Showing {filteredCitizens.length} of{" "}
+              Showing{" "}
+              {filteredCitizens.length} of{" "}
               {stats.total.toLocaleString()} citizens
             </span>
 
@@ -681,8 +691,13 @@ function Citizen() {
             <div className="citizen-modal-header">
 
               <div>
-                <h2>Citizen Details</h2>
-                <p>Registered citizen information</p>
+                <h2>
+                  Citizen Details
+                </h2>
+
+                <p>
+                  Registered citizen information
+                </p>
               </div>
 
               <button
@@ -705,7 +720,9 @@ function Citizen() {
                 </div>
 
                 <div>
-                  <h3>{selectedCitizen.name}</h3>
+                  <h3>
+                    {selectedCitizen.name}
+                  </h3>
 
                   <span
                     className={`status ${selectedCitizen.status?.toLowerCase()}`}
@@ -720,35 +737,49 @@ function Citizen() {
               <div className="citizen-details-grid">
 
                 <div>
-                  <label>Citizen ID</label>
+                  <label>
+                    Citizen ID
+                  </label>
+
                   <strong>
                     {selectedCitizen.citizen_id}
                   </strong>
                 </div>
 
                 <div>
-                  <label>Email</label>
+                  <label>
+                    Email
+                  </label>
+
                   <strong>
                     {selectedCitizen.email}
                   </strong>
                 </div>
 
                 <div>
-                  <label>Phone</label>
+                  <label>
+                    Phone
+                  </label>
+
                   <strong>
                     {selectedCitizen.phone || "N/A"}
                   </strong>
                 </div>
 
                 <div>
-                  <label>Area</label>
+                  <label>
+                    Area
+                  </label>
+
                   <strong>
                     {selectedCitizen.area || "N/A"}
                   </strong>
                 </div>
 
                 <div>
-                  <label>Registered</label>
+                  <label>
+                    Registered
+                  </label>
 
                   <strong>
                     {selectedCitizen.registered_at
@@ -760,7 +791,9 @@ function Citizen() {
                 </div>
 
                 <div>
-                  <label>Portal Access</label>
+                  <label>
+                    Portal Access
+                  </label>
 
                   <strong>
                     {selectedCitizen.status === "Active"
@@ -775,23 +808,14 @@ function Citizen() {
 
               <div className="citizen-profile-actions">
 
-                {selectedCitizen.status === "Pending" && (
-                  <button
-                    className="approve-citizen-btn"
-                    onClick={() =>
-                      activateCitizen(
-                        selectedCitizen.id
-                      )
-                    }
-                  >
-                    <UserCheck size={17} />
-                    Approve Citizen
-                  </button>
-                )}
+                {/* INACTIVE → ACTIVATE */}
 
                 {selectedCitizen.status === "Inactive" && (
                   <button
                     className="approve-citizen-btn"
+                    disabled={
+                      actionLoading === selectedCitizen.id
+                    }
                     onClick={() =>
                       activateCitizen(
                         selectedCitizen.id
@@ -799,13 +823,19 @@ function Citizen() {
                     }
                   >
                     <UserCheck size={17} />
+
                     Activate Citizen
                   </button>
                 )}
 
+                {/* ACTIVE → DEACTIVATE */}
+
                 {selectedCitizen.status === "Active" && (
                   <button
                     className="deactivate-citizen-btn"
+                    disabled={
+                      actionLoading === selectedCitizen.id
+                    }
                     onClick={() =>
                       deactivateCitizen(
                         selectedCitizen.id
@@ -813,9 +843,12 @@ function Citizen() {
                     }
                   >
                     <UserX size={17} />
-                    Deactivate
+
+                    Deactivate Citizen
                   </button>
                 )}
+
+                {/* DELETE */}
 
                 <button
                   className="delete-citizen-btn"
@@ -826,6 +859,7 @@ function Citizen() {
                   }}
                 >
                   <Trash2 size={17} />
+
                   Remove Citizen
                 </button>
 
@@ -852,10 +886,13 @@ function Citizen() {
               <Trash2 size={25} />
             </div>
 
-            <h2>Remove Citizen?</h2>
+            <h2>
+              Remove Citizen?
+            </h2>
 
             <p>
-              Are you sure you want to permanently remove{" "}
+              Are you sure you want to permanently
+              remove{" "}
               <strong>
                 {deleteCitizen.name}
               </strong>
@@ -882,7 +919,9 @@ function Citizen() {
                 disabled={
                   actionLoading === deleteCitizen.id
                 }
-                onClick={handleDeleteCitizen}
+                onClick={
+                  handleDeleteCitizen
+                }
               >
                 <Trash2 size={16} />
 
