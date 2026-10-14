@@ -445,21 +445,28 @@ router.put("/:id", async (req, res) => {
       }
     }
 
+    let emailDispatched = false;
+    let mailSendResult = null;
+
     if (status && status !== previousStatus && recipientEmail) {
-      emailDispatched = true;
-      sendComplaintStatusEmail({
-        toEmail: recipientEmail,
-        citizenName: resolvedCitizenName,
-        complaintId: req.params.id,
-        category: category || existingComplaint.category,
-        location: location || existingComplaint.location,
-        priority: priority || existingComplaint.priority,
-        previousStatus,
-        newStatus: status,
-        description: description || existingComplaint.description,
-      }).catch((mailErr) => {
+      try {
+        mailSendResult = await sendComplaintStatusEmail({
+          toEmail: recipientEmail,
+          citizenName: resolvedCitizenName,
+          complaintId: req.params.id,
+          category: category || existingComplaint.category,
+          location: location || existingComplaint.location,
+          priority: priority || existingComplaint.priority,
+          previousStatus,
+          newStatus: status,
+          description: description || existingComplaint.description,
+        });
+        emailDispatched = mailSendResult?.success === true;
+        console.log(`[Complaints] Email result for CMP-${req.params.id}:`, mailSendResult);
+      } catch (mailErr) {
         console.error("Background complaint email send error:", mailErr);
-      });
+        mailSendResult = { success: false, error: mailErr.message };
+      }
 
       // Also record system notification
       try {
@@ -479,6 +486,7 @@ router.put("/:id", async (req, res) => {
     res.json({
       message: "Complaint updated successfully",
       emailSent: emailDispatched,
+      mailResult: mailSendResult,
       recipient: recipientEmail || null,
       smtpConfigured: isSmtpConfigured(),
       previousStatus,

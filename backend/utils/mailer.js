@@ -74,10 +74,10 @@ export const createMailerTransporter = () => {
 };
 
 const getFromAddress = () => {
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
+  if (user) return `"Smart City Administration" <${user}>`;
   if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
   if (process.env.SMTP_FROM) return process.env.SMTP_FROM;
-  if (user) return `"Smart City Administration" <${user}>`;
   return '"Smart City Administration" <no-reply@smartcity.gov>';
 };
 

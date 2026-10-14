@@ -241,17 +241,20 @@ const Complaints: React.FC = () => {
       }
 
       if (resData?.emailSent && resData?.recipient) {
-        if (resData?.smtpConfigured === false) {
-          showToast(
-            `Status updated to ${nextStatus}! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
-            "info"
-          );
-        } else {
-          showToast(
-            `Complaint moved to ${nextStatus}. Email sent to ${resData.recipient}`,
-            "success"
-          );
-        }
+        showToast(
+          `Status changed to ${nextStatus}. Email sent to ${resData.recipient}`,
+          "success"
+        );
+      } else if (resData?.recipient && !resData?.emailSent) {
+        showToast(
+          `Status changed to ${nextStatus}, but email failed: ${resData?.mailResult?.error || "Check mailer configuration"}`,
+          "error"
+        );
+      } else if (!resData?.recipient) {
+        showToast(
+          `Status changed to ${nextStatus}. (Notice: No citizen email linked to this complaint)`,
+          "info"
+        );
       } else {
         showToast(`Complaint moved to ${nextStatus}`, "success");
       }
@@ -349,17 +352,20 @@ const Complaints: React.FC = () => {
       setEditingComplaint(null);
 
       if (resData?.emailSent && resData?.recipient) {
-        if (resData?.smtpConfigured === false) {
-          showToast(
-            `Complaint updated! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
-            "info"
-          );
-        } else {
-          showToast(
-            `Complaint updated! Status email sent to ${resData.recipient}`,
-            "success"
-          );
-        }
+        showToast(
+          `Complaint updated! Status email sent to ${resData.recipient}`,
+          "success"
+        );
+      } else if (resData?.recipient && !resData?.emailSent) {
+        showToast(
+          `Complaint updated, but email failed: ${resData?.mailResult?.error || "Check mailer configuration"}`,
+          "error"
+        );
+      } else if (!resData?.recipient) {
+        showToast(
+          `Complaint updated! (No citizen email linked to this complaint)`,
+          "info"
+        );
       } else {
         showToast("Complaint updated successfully!", "success");
       }
