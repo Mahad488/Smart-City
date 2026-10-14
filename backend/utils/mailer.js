@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
  * Checks whether email delivery is configured in environment variables.
  */
 export const isSmtpConfigured = () => {
-  if (process.env.RESEND_API_KEY) return true;
+  if (process.env.RESEND_API_KEY || process.env.BREVO_API_KEY) return true;
   const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
   const rawPass =
     process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
@@ -13,10 +13,52 @@ export const isSmtpConfigured = () => {
 };
 
 /**
+ * Sends email via Brevo HTTPS API (Port 443).
+ * Brevo allows sending to ANY recipient in the world for free without a custom domain.
+ */
+export const sendViaBrevo = async ({ toEmail, citizenName, subject, htmlContent, textContent }) => {
+  const apiKey = (process.env.BREVO_API_KEY || "").trim();
+  if (!apiKey) return null;
+
+  const senderEmail = (process.env.BREVO_SENDER || process.env.EMAIL_USER || "muhammadmahad2021@gmail.com").trim();
+  const senderName = process.env.BREVO_SENDER_NAME || "Smart City Administration";
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: senderName,
+        email: senderEmail,
+      },
+      to: [
+        {
+          email: toEmail,
+          name: citizenName || "Citizen",
+        },
+      ],
+      subject,
+      htmlContent,
+      textContent,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || data.error || "Failed to send email via Brevo API");
+  }
+  return { success: true, messageId: data.messageId, recipient: toEmail };
+};
+
+/**
  * Sends email via Resend HTTPS API (Port 443).
  * This completely bypasses cloud SMTP port blocking on Railway, Render, etc.
  */
-export const sendViaResend = async ({ toEmail, subject, html, text }) => {
+export const sendViaResend = async ({ toEmail, citizenName = "Citizen", subject, html, text }) => {
   const apiKey = (process.env.RESEND_API_KEY || "").trim();
   if (!apiKey) return null;
 
@@ -46,7 +88,53 @@ export const sendViaResend = async ({ toEmail, subject, html, text }) => {
 
   const data = await response.json();
   if (!response.ok) {
-    const errorDetails = typeof data === "object" ? JSON.stringify(data) : data;
+    const errorDetails = typeof data === "object" ? JSON.stringify(data) : String(data);
+    const msg = String(data.message || data.error || errorDetails);
+
+    // Handle Resend sandbox limitation (can only send to verified owner email without a custom domain)
+    if (msg.toLowerCase().includes("only send testing emails to your own email address")) {
+      const match = msg.match(/\(([^)]+)\)/);
+      const ownerEmail = match ? match[1].trim() : (process.env.EMAIL_USER || "muhammadmahad2021@gmail.com").trim();
+
+      if (ownerEmail && ownerEmail.toLowerCase() !== toEmail.toLowerCase()) {
+        console.warn(`[Mailer - Resend Sandbox] Re-routing test email intended for ${toEmail} to verified account owner ${ownerEmail}`);
+
+        const sandboxNotice = `
+          <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px; font-size: 13px; color: #92400e; font-family: sans-serif;">
+            <strong>⚠️ Resend Sandbox Testing Notice:</strong><br>
+            This incident update was originally addressed to citizen: <strong>${toEmail}</strong> (${citizenName}).<br>
+            Because Resend's free tier without a custom domain only allows sending to the verified account owner, it has been delivered to your developer address <strong>(${ownerEmail})</strong> so you can inspect it.
+          </div>
+        `;
+
+        const retryRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from,
+            to: [ownerEmail],
+            subject: `[For: ${toEmail}] ${subject}`,
+            html: sandboxNotice + html,
+            text: `[Sandbox Notice: Intended for ${toEmail}]\n\n` + text,
+          }),
+        });
+
+        const retryData = await retryRes.json();
+        if (retryRes.ok) {
+          console.log(`[Mailer - Resend Sandbox] Re-route successful to ${ownerEmail} (ID: ${retryData.id})`);
+          return {
+            success: true,
+            messageId: retryData.id,
+            recipient: `${toEmail} (Delivered to ${ownerEmail} via Resend Sandbox)`,
+            sandbox: true,
+          };
+        }
+      }
+    }
+
     throw new Error(data.message || data.error || errorDetails || "Failed to send email via Resend HTTPS API");
   }
   return { success: true, messageId: data.id, recipient: toEmail };
@@ -84,9 +172,9 @@ export const createMailerTransporter = () => {
         user,
         pass,
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
     });
   }
 
@@ -128,7 +216,6 @@ export const sendComplaintStatusEmail = async ({
   }
 
   try {
-    const transporter = createMailerTransporter();
     const formattedId = `CMP-${String(complaintId).padStart(4, "0")}`;
 
     // Color definitions for status
@@ -295,17 +382,37 @@ Best regards,
 Smart City Administration & Citizen Care
     `.trim();
 
-    // 1. Try Resend HTTPS API first (Bypasses Railway cloud SMTP port blocking)
+    // 1. Try Brevo HTTPS API first if configured (Sends to ANY recipient worldwide without domain)
+    if (process.env.BREVO_API_KEY) {
+      try {
+        const brevoRes = await sendViaBrevo({
+          toEmail,
+          citizenName,
+          subject,
+          htmlContent,
+          textContent,
+        });
+        if (brevoRes?.success) {
+          console.log(`[Mailer - Brevo HTTPS] Email successfully delivered to ${toEmail} for Complaint #${formattedId}`);
+          return brevoRes;
+        }
+      } catch (brevoErr) {
+        console.warn(`[Mailer - Brevo HTTPS Notice]:`, brevoErr.message);
+      }
+    }
+
+    // 2. Try Resend HTTPS API (Auto-handles sandbox testing mode)
     if (process.env.RESEND_API_KEY) {
       try {
         const resendRes = await sendViaResend({
           toEmail,
+          citizenName,
           subject,
           html: htmlContent,
           text: textContent,
         });
         if (resendRes?.success) {
-          console.log(`[Mailer - Resend HTTPS] Email successfully delivered to ${toEmail} for Complaint #${formattedId}`);
+          console.log(`[Mailer - Resend HTTPS] Email successfully delivered for Complaint #${formattedId} (Recipient: ${resendRes.recipient})`);
           return resendRes;
         }
       } catch (resendErr) {
@@ -313,7 +420,8 @@ Smart City Administration & Citizen Care
       }
     }
 
-    // 2. Fallback to direct SMTP
+    // 3. Fallback to direct SMTP
+    const transporter = createMailerTransporter();
     const mailOptions = {
       from: getFromAddress(),
       to: toEmail,
@@ -351,7 +459,6 @@ export const sendEmergencyStatusEmail = async ({
   }
 
   try {
-    const transporter = createMailerTransporter();
     const formattedId = `EMG-${String(emergencyId).padStart(4, "0")}`;
 
     let statusBg = "#fef2f2";
@@ -514,17 +621,37 @@ Emergency Hotlines: Rescue: 1122 | Police: 15 | Fire: 16
 Smart City Emergency Command & Dispatch Operations
     `.trim();
 
-    // 1. Try Resend HTTPS API first (Bypasses Railway cloud SMTP port blocking)
+    // 1. Try Brevo HTTPS API first if configured (Sends to ANY recipient worldwide without domain)
+    if (process.env.BREVO_API_KEY) {
+      try {
+        const brevoRes = await sendViaBrevo({
+          toEmail,
+          citizenName,
+          subject,
+          htmlContent,
+          textContent,
+        });
+        if (brevoRes?.success) {
+          console.log(`[Mailer - Brevo HTTPS] Email successfully delivered to ${toEmail} for Emergency #${formattedId}`);
+          return brevoRes;
+        }
+      } catch (brevoErr) {
+        console.warn(`[Mailer - Brevo HTTPS Notice]:`, brevoErr.message);
+      }
+    }
+
+    // 2. Try Resend HTTPS API (Auto-handles sandbox testing mode)
     if (process.env.RESEND_API_KEY) {
       try {
         const resendRes = await sendViaResend({
           toEmail,
+          citizenName,
           subject,
           html: htmlContent,
           text: textContent,
         });
         if (resendRes?.success) {
-          console.log(`[Mailer - Resend HTTPS] Email successfully delivered to ${toEmail} for Emergency #${formattedId}`);
+          console.log(`[Mailer - Resend HTTPS] Email successfully delivered for Emergency #${formattedId} (Recipient: ${resendRes.recipient})`);
           return resendRes;
         }
       } catch (resendErr) {
@@ -532,7 +659,8 @@ Smart City Emergency Command & Dispatch Operations
       }
     }
 
-    // 2. Fallback to direct SMTP
+    // 3. Fallback to direct SMTP
+    const transporter = createMailerTransporter();
     const mailOptions = {
       from: getFromAddress(),
       to: toEmail,
