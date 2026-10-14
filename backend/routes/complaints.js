@@ -422,7 +422,6 @@ router.put("/:id", async (req, res) => {
     }
 
     // Check if status has changed and trigger notification email in English
-    let emailDispatched = false;
     let recipientEmail = citizen_email || existingComplaint.citizen_email;
     let resolvedCitizenName =
       citizen_name || existingComplaint.citizen_name || "Valued Citizen";
