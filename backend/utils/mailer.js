@@ -1,12 +1,23 @@
 import nodemailer from "nodemailer";
 
 /**
+ * Checks whether real SMTP credentials are configured in environment variables.
+ */
+export const isSmtpConfigured = () => {
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass =
+    process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  return Boolean(user && pass);
+};
+
+/**
  * Creates and configures the email transporter.
  * Supports environment variables:
+ * - EMAIL_SERVICE (e.g. 'gmail')
  * - SMTP_HOST / EMAIL_HOST (e.g. smtp.gmail.com)
  * - SMTP_PORT / EMAIL_PORT (e.g. 587 or 465)
- * - SMTP_USER / EMAIL_USER (e.g. your email address)
- * - SMTP_PASS / EMAIL_PASS / EMAIL_PASSWORD (e.g. app password)
+ * - SMTP_USER / EMAIL_USER (e.g. your Gmail address)
+ * - SMTP_PASS / EMAIL_PASS / EMAIL_PASSWORD (e.g. 16-digit App Password)
  * - SMTP_SECURE (true for 465)
  * - EMAIL_FROM (e.g. "Smart City Administration" <no-reply@smartcity.gov>)
  */
@@ -14,13 +25,33 @@ export const createMailerTransporter = () => {
   const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
   const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587);
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  const pass =
+    process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  const service = process.env.EMAIL_SERVICE;
   const secure =
     process.env.SMTP_SECURE === "true" || port === 465;
 
-  if (host && user && pass) {
+  if (user && pass) {
+    if (
+      service === "gmail" ||
+      (user && user.toLowerCase().endsWith("@gmail.com")) ||
+      (!host && !service)
+    ) {
+      console.log(`[Mailer] Initializing direct Gmail transporter for ${user}`);
+      return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user,
+          pass,
+        },
+      });
+    }
+
+    console.log(
+      `[Mailer] Initializing custom SMTP transporter (${host || "smtp.gmail.com"}:${port}) for ${user}`
+    );
     return nodemailer.createTransport({
-      host,
+      host: host || "smtp.gmail.com",
       port,
       secure,
       auth: {
@@ -30,19 +61,22 @@ export const createMailerTransporter = () => {
     });
   }
 
-  // Fallback: If SMTP credentials are not yet set in .env,
-  // we create a jsonTransport/stream transporter for safe development logging
+  // Fallback: If SMTP credentials are not yet set in .env / Railway,
+  // we create a jsonTransport transporter for development/safe execution without crashing
+  console.warn(
+    "[Mailer Warning] SMTP credentials (EMAIL_USER & EMAIL_PASS) are NOT configured in environment. Notification email was processed in simulation mode (jsonTransport) and not delivered to inboxes. Please set EMAIL_USER and EMAIL_PASS to enable real email delivery."
+  );
   return nodemailer.createTransport({
     jsonTransport: true,
   });
 };
 
 const getFromAddress = () => {
-  return (
-    process.env.EMAIL_FROM ||
-    process.env.SMTP_FROM ||
-    '"Smart City Administration" <no-reply@smartcity.gov>'
-  );
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
+  if (process.env.SMTP_FROM) return process.env.SMTP_FROM;
+  if (user) return `"Smart City Administration" <${user}>`;
+  return '"Smart City Administration" <no-reply@smartcity.gov>';
 };
 
 // ============================================================================

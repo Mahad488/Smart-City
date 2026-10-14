@@ -1,6 +1,6 @@
 import express from "express";
 import db from "../config/db.js";
-import { sendEmergencyStatusEmail } from "../utils/mailer.js";
+import { sendEmergencyStatusEmail, isSmtpConfigured } from "../utils/mailer.js";
 
 const router = express.Router();
 
@@ -10,25 +10,49 @@ const router = express.Router();
 // =====================================================
 router.get("/", async (req, res) => {
   try {
-    let rows;
+    let emergencies = [];
     try {
-      const [joinedRows] = await db.query(
-        `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
-         FROM emergencies e
-         LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
-         ORDER BY e.id DESC`
+      const [rows] = await db.query(
+        `SELECT * FROM emergencies ORDER BY created_at DESC`
       );
-      rows = joinedRows;
-    } catch (joinErr) {
-      console.warn("Emergencies join query failed, falling back to basic query:", joinErr.message);
-      const [basicRows] = await db.query(
+      emergencies = rows;
+    } catch (orderErr) {
+      const [rows] = await db.query(
         `SELECT * FROM emergencies ORDER BY id DESC`
       );
-      rows = basicRows;
+      emergencies = rows;
     }
 
-    res.json(rows || []);
+    try {
+      const [citizens] = await db.query(
+        `SELECT id, citizen_id, name, email, phone FROM citizens`
+      );
 
+      const citizenMap = new Map();
+      for (const cz of citizens) {
+        if (cz.citizen_id) {
+          citizenMap.set(String(cz.citizen_id).trim(), cz);
+        }
+        if (cz.id) {
+          citizenMap.set(String(cz.id).trim(), cz);
+        }
+      }
+
+      const enriched = emergencies.map((e) => {
+        const cz = e.citizen_id ? citizenMap.get(String(e.citizen_id).trim()) : null;
+        return {
+          ...e,
+          citizen_name: cz ? cz.name : null,
+          citizen_email: cz ? cz.email : null,
+          citizen_phone: cz ? cz.phone : null,
+        };
+      });
+
+      return res.json(enriched);
+    } catch (czErr) {
+      console.warn("Could not enrich emergencies with citizens:", czErr.message);
+      return res.json(emergencies);
+    }
   } catch (error) {
     console.error("GET EMERGENCIES ERROR:", error);
 
@@ -360,9 +384,27 @@ router.put("/:id", async (req, res) => {
 
     // Check if status has changed and trigger notification email in English
     let emailDispatched = false;
-    const recipientEmail = citizen_email || existingEmergency.citizen_email;
-    const resolvedCitizenName =
+    let recipientEmail = citizen_email || existingEmergency.citizen_email;
+    let resolvedCitizenName =
       citizen_name || existingEmergency.citizen_name || "Valued Citizen";
+
+    // If recipientEmail was not passed or joined, look it up directly from citizens table
+    if (!recipientEmail && existingEmergency.citizen_id) {
+      try {
+        const [czRows] = await db.query(
+          `SELECT name, email FROM citizens WHERE citizen_id = ? OR CAST(id AS CHAR) = ? LIMIT 1`,
+          [existingEmergency.citizen_id, existingEmergency.citizen_id]
+        );
+        if (czRows && czRows.length > 0) {
+          recipientEmail = czRows[0].email;
+          if (!citizen_name && czRows[0].name) {
+            resolvedCitizenName = czRows[0].name;
+          }
+        }
+      } catch (lookupErr) {
+        console.warn("Direct emergency citizen email lookup failed:", lookupErr.message);
+      }
+    }
 
     if (status && status !== previousStatus && recipientEmail) {
       emailDispatched = true;
@@ -399,6 +441,7 @@ router.put("/:id", async (req, res) => {
       message: "Emergency updated successfully",
       emailSent: emailDispatched,
       recipient: recipientEmail || null,
+      smtpConfigured: isSmtpConfigured(),
       previousStatus,
       newStatus: status,
     });

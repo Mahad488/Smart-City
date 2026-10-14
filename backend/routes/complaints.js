@@ -1,6 +1,6 @@
 import express from "express";
 import db from "../config/db.js";
-import { sendComplaintStatusEmail } from "../utils/mailer.js";
+import { sendComplaintStatusEmail, isSmtpConfigured } from "../utils/mailer.js";
 
 const router = express.Router();
 
@@ -10,31 +10,49 @@ const router = express.Router();
 // =====================================================
 router.get("/", async (req, res) => {
   try {
-    let rows;
+    let complaints = [];
     try {
-      const [joinedRows] = await db.query(
-        `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
-         FROM complaints c
-         LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
-         ORDER BY c.created_at DESC`
+      const [rows] = await db.query(
+        `SELECT * FROM complaints ORDER BY created_at DESC`
       );
-      rows = joinedRows;
-    } catch (joinErr) {
-      console.warn("Complaints join query failed, falling back to basic query:", joinErr.message);
-      try {
-        const [basicRows] = await db.query(
-          `SELECT * FROM complaints ORDER BY created_at DESC`
-        );
-        rows = basicRows;
-      } catch (orderErr) {
-        const [idRows] = await db.query(
-          `SELECT * FROM complaints ORDER BY id DESC`
-        );
-        rows = idRows;
-      }
+      complaints = rows;
+    } catch (orderErr) {
+      const [rows] = await db.query(
+        `SELECT * FROM complaints ORDER BY id DESC`
+      );
+      complaints = rows;
     }
 
-    res.json(rows || []);
+    try {
+      const [citizens] = await db.query(
+        `SELECT id, citizen_id, name, email, phone FROM citizens`
+      );
+
+      const citizenMap = new Map();
+      for (const cz of citizens) {
+        if (cz.citizen_id) {
+          citizenMap.set(String(cz.citizen_id).trim(), cz);
+        }
+        if (cz.id) {
+          citizenMap.set(String(cz.id).trim(), cz);
+        }
+      }
+
+      const enriched = complaints.map((c) => {
+        const cz = c.citizen_id ? citizenMap.get(String(c.citizen_id).trim()) : null;
+        return {
+          ...c,
+          citizen_name: cz ? cz.name : null,
+          citizen_email: cz ? cz.email : null,
+          citizen_phone: cz ? cz.phone : null,
+        };
+      });
+
+      return res.json(enriched);
+    } catch (czErr) {
+      console.warn("Could not enrich complaints with citizens:", czErr.message);
+      return res.json(complaints);
+    }
   } catch (error) {
     console.error("GET COMPLAINTS ERROR:", error);
 
@@ -422,9 +440,27 @@ router.put("/:id", async (req, res) => {
 
     // Check if status has changed and trigger notification email in English
     let emailDispatched = false;
-    const recipientEmail = citizen_email || existingComplaint.citizen_email;
-    const resolvedCitizenName =
+    let recipientEmail = citizen_email || existingComplaint.citizen_email;
+    let resolvedCitizenName =
       citizen_name || existingComplaint.citizen_name || "Valued Citizen";
+
+    // If recipientEmail was not passed or joined, look it up directly from citizens table
+    if (!recipientEmail && existingComplaint.citizen_id) {
+      try {
+        const [czRows] = await db.query(
+          `SELECT name, email FROM citizens WHERE citizen_id = ? OR CAST(id AS CHAR) = ? LIMIT 1`,
+          [existingComplaint.citizen_id, existingComplaint.citizen_id]
+        );
+        if (czRows && czRows.length > 0) {
+          recipientEmail = czRows[0].email;
+          if (!citizen_name && czRows[0].name) {
+            resolvedCitizenName = czRows[0].name;
+          }
+        }
+      } catch (lookupErr) {
+        console.warn("Direct citizen email lookup failed:", lookupErr.message);
+      }
+    }
 
     if (status && status !== previousStatus && recipientEmail) {
       emailDispatched = true;
@@ -461,6 +497,7 @@ router.put("/:id", async (req, res) => {
       message: "Complaint updated successfully",
       emailSent: emailDispatched,
       recipient: recipientEmail || null,
+      smtpConfigured: isSmtpConfigured(),
       previousStatus,
       newStatus: status,
     });

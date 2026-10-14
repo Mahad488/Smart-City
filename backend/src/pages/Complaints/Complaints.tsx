@@ -241,10 +241,17 @@ const Complaints: React.FC = () => {
       }
 
       if (resData?.emailSent && resData?.recipient) {
-        showToast(
-          `Complaint moved to ${nextStatus}. Email sent to ${resData.recipient}`,
-          "success"
-        );
+        if (resData?.smtpConfigured === false) {
+          showToast(
+            `Status updated to ${nextStatus}! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Complaint moved to ${nextStatus}. Email sent to ${resData.recipient}`,
+            "success"
+          );
+        }
       } else {
         showToast(`Complaint moved to ${nextStatus}`, "success");
       }
@@ -342,10 +349,17 @@ const Complaints: React.FC = () => {
       setEditingComplaint(null);
 
       if (resData?.emailSent && resData?.recipient) {
-        showToast(
-          `Complaint updated! Status email sent to ${resData.recipient}`,
-          "success"
-        );
+        if (resData?.smtpConfigured === false) {
+          showToast(
+            `Complaint updated! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Complaint updated! Status email sent to ${resData.recipient}`,
+            "success"
+          );
+        }
       } else {
         showToast("Complaint updated successfully!", "success");
       }

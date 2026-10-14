@@ -251,10 +251,17 @@ const Emergency: React.FC = () => {
       }
 
       if (resData?.emailSent && resData?.recipient) {
-        showToast(
-          `Incident marked as ${nextStatus}. Email dispatched to ${resData.recipient}`,
-          "success"
-        );
+        if (resData?.smtpConfigured === false) {
+          showToast(
+            `Incident marked as ${nextStatus}! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Incident marked as ${nextStatus}. Email dispatched to ${resData.recipient}`,
+            "success"
+          );
+        }
       } else {
         showToast(`Emergency incident marked as ${nextStatus}`, "success");
       }
@@ -347,10 +354,17 @@ const Emergency: React.FC = () => {
       setEditingEmergency(null);
 
       if (resData?.emailSent && resData?.recipient) {
-        showToast(
-          `Emergency updated! Incident email dispatched to ${resData.recipient}`,
-          "success"
-        );
+        if (resData?.smtpConfigured === false) {
+          showToast(
+            `Emergency updated! Note: Configure EMAIL_USER & EMAIL_PASS in server settings to deliver live emails to ${resData.recipient}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Emergency updated! Incident email dispatched to ${resData.recipient}`,
+            "success"
+          );
+        }
       } else {
         showToast("Emergency details updated!", "success");
       }
