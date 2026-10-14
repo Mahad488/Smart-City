@@ -10,20 +10,31 @@ const router = express.Router();
 // =====================================================
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.query(
-      `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
-       FROM emergencies e
-       LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
-       ORDER BY e.id DESC`
-    );
+    let rows;
+    try {
+      const [joinedRows] = await db.query(
+        `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
+         FROM emergencies e
+         LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
+         ORDER BY e.id DESC`
+      );
+      rows = joinedRows;
+    } catch (joinErr) {
+      console.warn("Emergencies join query failed, falling back to basic query:", joinErr.message);
+      const [basicRows] = await db.query(
+        `SELECT * FROM emergencies ORDER BY id DESC`
+      );
+      rows = basicRows;
+    }
 
-    res.json(rows);
+    res.json(rows || []);
 
   } catch (error) {
     console.error("GET EMERGENCIES ERROR:", error);
 
     res.status(500).json({
       message: "Error fetching emergencies",
+      error: error.message,
     });
   }
 });
@@ -287,22 +298,36 @@ router.put("/:id", async (req, res) => {
       citizen_name,
     } = req.body;
 
-    // Fetch existing emergency with citizen details
-    const [existingRows] = await db.query(
-      `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email
-       FROM emergencies e
-       LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
-       WHERE e.id = ?`,
-      [req.params.id]
-    );
+    // Fetch existing emergency with citizen details (with safe fallback)
+    let existingEmergency = null;
+    try {
+      const [existingRows] = await db.query(
+        `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email
+         FROM emergencies e
+         LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
+         WHERE e.id = ?`,
+        [req.params.id]
+      );
+      if (existingRows && existingRows.length > 0) {
+        existingEmergency = existingRows[0];
+      }
+    } catch (joinErr) {
+      console.warn("Fetch emergency join failed, falling back:", joinErr.message);
+      const [plainRows] = await db.query(
+        `SELECT * FROM emergencies WHERE id = ?`,
+        [req.params.id]
+      );
+      if (plainRows && plainRows.length > 0) {
+        existingEmergency = plainRows[0];
+      }
+    }
 
-    if (!existingRows || existingRows.length === 0) {
+    if (!existingEmergency) {
       return res.status(404).json({
         message: "Emergency not found",
       });
     }
 
-    const existingEmergency = existingRows[0];
     const previousStatus = existingEmergency.status;
 
     const [result] = await db.query(

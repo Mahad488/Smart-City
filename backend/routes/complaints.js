@@ -10,19 +10,37 @@ const router = express.Router();
 // =====================================================
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.query(
-      `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
-       FROM complaints c
-       LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
-       ORDER BY c.created_at DESC`
-    );
+    let rows;
+    try {
+      const [joinedRows] = await db.query(
+        `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
+         FROM complaints c
+         LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
+         ORDER BY c.created_at DESC`
+      );
+      rows = joinedRows;
+    } catch (joinErr) {
+      console.warn("Complaints join query failed, falling back to basic query:", joinErr.message);
+      try {
+        const [basicRows] = await db.query(
+          `SELECT * FROM complaints ORDER BY created_at DESC`
+        );
+        rows = basicRows;
+      } catch (orderErr) {
+        const [idRows] = await db.query(
+          `SELECT * FROM complaints ORDER BY id DESC`
+        );
+        rows = idRows;
+      }
+    }
 
-    res.json(rows);
+    res.json(rows || []);
   } catch (error) {
     console.error("GET COMPLAINTS ERROR:", error);
 
     res.status(500).json({
       message: "Error fetching complaints",
+      error: error.message,
     });
   }
 });
@@ -342,22 +360,36 @@ router.put("/:id", async (req, res) => {
       citizen_name,
     } = req.body;
 
-    // Fetch existing complaint with citizen details
-    const [existingRows] = await db.query(
-      `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email
-       FROM complaints c
-       LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
-       WHERE c.id = ?`,
-      [req.params.id]
-    );
+    // Fetch existing complaint with citizen details (with safe fallback)
+    let existingComplaint = null;
+    try {
+      const [existingRows] = await db.query(
+        `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email
+         FROM complaints c
+         LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
+         WHERE c.id = ?`,
+        [req.params.id]
+      );
+      if (existingRows && existingRows.length > 0) {
+        existingComplaint = existingRows[0];
+      }
+    } catch (joinErr) {
+      console.warn("Fetch complaint join failed, falling back:", joinErr.message);
+      const [plainRows] = await db.query(
+        `SELECT * FROM complaints WHERE id = ?`,
+        [req.params.id]
+      );
+      if (plainRows && plainRows.length > 0) {
+        existingComplaint = plainRows[0];
+      }
+    }
 
-    if (!existingRows || existingRows.length === 0) {
+    if (!existingComplaint) {
       return res.status(404).json({
         message: "Complaint not found",
       });
     }
 
-    const existingComplaint = existingRows[0];
     const previousStatus = existingComplaint.status;
 
     const [result] = await db.query(

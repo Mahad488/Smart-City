@@ -54,21 +54,34 @@ app.use(express.urlencoded({ extended: true }));
 let databaseInitialized = false;
 let databaseInitializationPromise = null;
 
-const ensureAdminSettingsTable = async () => {
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS admin_settings (
-      admin_id INT PRIMARY KEY,
-      language VARCHAR(50) DEFAULT 'English',
-      timezone VARCHAR(100) DEFAULT 'Pakistan Standard Time',
-      date_format VARCHAR(30) DEFAULT 'DD/MM/YYYY',
-      dashboard_refresh VARCHAR(30) DEFAULT '5 Minutes',
-      two_factor_enabled BOOLEAN DEFAULT FALSE,
-      CONSTRAINT fk_admin_settings_admin
-        FOREIGN KEY (admin_id)
-        REFERENCES admins(id)
-        ON DELETE CASCADE
-    )
-  `);
+const ensureDatabaseSchema = async () => {
+  await ensureAdminSettingsTable();
+
+  // Ensure citizen_id column exists in complaints table
+  try {
+    await db.query(`
+      ALTER TABLE complaints
+      ADD COLUMN citizen_id VARCHAR(50) NULL
+    `);
+    console.log("Added citizen_id column to complaints table.");
+  } catch (err) {
+    if (err.code !== "ER_DUP_FIELDNAME" && err.errno !== 1060) {
+      console.warn("Notice complaints.citizen_id column:", err.message);
+    }
+  }
+
+  // Ensure citizen_id column exists in emergencies table
+  try {
+    await db.query(`
+      ALTER TABLE emergencies
+      ADD COLUMN citizen_id VARCHAR(50) NULL
+    `);
+    console.log("Added citizen_id column to emergencies table.");
+  } catch (err) {
+    if (err.code !== "ER_DUP_FIELDNAME" && err.errno !== 1060) {
+      console.warn("Notice emergencies.citizen_id column:", err.message);
+    }
+  }
 };
 
 const initializeDatabase = async () => {
@@ -77,7 +90,7 @@ const initializeDatabase = async () => {
   }
 
   if (!databaseInitializationPromise) {
-    databaseInitializationPromise = ensureAdminSettingsTable()
+    databaseInitializationPromise = ensureDatabaseSchema()
       .then(() => {
         databaseInitialized = true;
         console.log("Database initialized successfully.");
