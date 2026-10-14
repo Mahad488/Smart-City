@@ -78,11 +78,11 @@ const ensureAdminSettingsTable = async () => {
 const ensureDatabaseSchema = async () => {
   await ensureAdminSettingsTable();
 
-  // Ensure citizen_id column exists in complaints table
+  // Ensure citizen_id column exists in complaints table with utf8mb4_unicode_ci collation
   try {
     await db.query(`
       ALTER TABLE complaints
-      ADD COLUMN citizen_id VARCHAR(50) NULL
+      ADD COLUMN citizen_id VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
     `);
     console.log("Added citizen_id column to complaints table.");
   } catch (err) {
@@ -91,17 +91,37 @@ const ensureDatabaseSchema = async () => {
     }
   }
 
-  // Ensure citizen_id column exists in emergencies table
+  // Ensure collation of citizen_id in complaints matches citizens table
+  try {
+    await db.query(`
+      ALTER TABLE complaints
+      MODIFY COLUMN citizen_id VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+    `);
+  } catch (err) {
+    // Non-fatal
+  }
+
+  // Ensure citizen_id column exists in emergencies table with utf8mb4_unicode_ci collation
   try {
     await db.query(`
       ALTER TABLE emergencies
-      ADD COLUMN citizen_id VARCHAR(50) NULL
+      ADD COLUMN citizen_id VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
     `);
     console.log("Added citizen_id column to emergencies table.");
   } catch (err) {
     if (err.code !== "ER_DUP_FIELDNAME" && err.errno !== 1060) {
       console.warn("Notice emergencies.citizen_id column:", err.message);
     }
+  }
+
+  // Ensure collation of citizen_id in emergencies matches citizens table
+  try {
+    await db.query(`
+      ALTER TABLE emergencies
+      MODIFY COLUMN citizen_id VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+    `);
+  } catch (err) {
+    // Non-fatal
   }
 };
 

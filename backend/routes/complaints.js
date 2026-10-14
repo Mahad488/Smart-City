@@ -378,36 +378,19 @@ router.put("/:id", async (req, res) => {
       citizen_name,
     } = req.body;
 
-    // Fetch existing complaint with citizen details (with safe fallback)
-    let existingComplaint = null;
-    try {
-      const [existingRows] = await db.query(
-        `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email
-         FROM complaints c
-         LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
-         WHERE c.id = ?`,
-        [req.params.id]
-      );
-      if (existingRows && existingRows.length > 0) {
-        existingComplaint = existingRows[0];
-      }
-    } catch (joinErr) {
-      console.warn("Fetch complaint join failed, falling back:", joinErr.message);
-      const [plainRows] = await db.query(
-        `SELECT * FROM complaints WHERE id = ?`,
-        [req.params.id]
-      );
-      if (plainRows && plainRows.length > 0) {
-        existingComplaint = plainRows[0];
-      }
-    }
+    // Fetch existing complaint
+    const [existingRows] = await db.query(
+      `SELECT * FROM complaints WHERE id = ?`,
+      [req.params.id]
+    );
 
-    if (!existingComplaint) {
+    if (!existingRows || existingRows.length === 0) {
       return res.status(404).json({
         message: "Complaint not found",
       });
     }
 
+    const existingComplaint = existingRows[0];
     const previousStatus = existingComplaint.status;
 
     const [result] = await db.query(

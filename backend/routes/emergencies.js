@@ -322,36 +322,19 @@ router.put("/:id", async (req, res) => {
       citizen_name,
     } = req.body;
 
-    // Fetch existing emergency with citizen details (with safe fallback)
-    let existingEmergency = null;
-    try {
-      const [existingRows] = await db.query(
-        `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email
-         FROM emergencies e
-         LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
-         WHERE e.id = ?`,
-        [req.params.id]
-      );
-      if (existingRows && existingRows.length > 0) {
-        existingEmergency = existingRows[0];
-      }
-    } catch (joinErr) {
-      console.warn("Fetch emergency join failed, falling back:", joinErr.message);
-      const [plainRows] = await db.query(
-        `SELECT * FROM emergencies WHERE id = ?`,
-        [req.params.id]
-      );
-      if (plainRows && plainRows.length > 0) {
-        existingEmergency = plainRows[0];
-      }
-    }
+    // Fetch existing emergency
+    const [existingRows] = await db.query(
+      `SELECT * FROM emergencies WHERE id = ?`,
+      [req.params.id]
+    );
 
-    if (!existingEmergency) {
+    if (!existingRows || existingRows.length === 0) {
       return res.status(404).json({
         message: "Emergency not found",
       });
     }
 
+    const existingEmergency = existingRows[0];
     const previousStatus = existingEmergency.status;
 
     const [result] = await db.query(
