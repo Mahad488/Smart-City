@@ -4,9 +4,10 @@ import nodemailer from "nodemailer";
  * Checks whether real SMTP credentials are configured in environment variables.
  */
 export const isSmtpConfigured = () => {
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass =
+  const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
+  const rawPass =
     process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  const pass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
   return Boolean(user && pass);
 };
 
@@ -24,9 +25,10 @@ export const isSmtpConfigured = () => {
 export const createMailerTransporter = () => {
   const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
   const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587);
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass =
+  const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
+  const rawPass =
     process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  const pass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
   const service = process.env.EMAIL_SERVICE;
   const secure =
     process.env.SMTP_SECURE === "true" || port === 465;

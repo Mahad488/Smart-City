@@ -30,6 +30,10 @@
   border-left: 4px solid #dc2626;
 }
 
+.toast-info {
+  border-left: 4px solid #2563eb;
+}
+
 .toast-icon {
   display: flex;
   align-items: center;
@@ -42,6 +46,10 @@
 
 .toast-error .toast-icon {
   color: #dc2626;
+}
+
+.toast-info .toast-icon {
+  color: #2563eb;
 }
 
 .toast span {

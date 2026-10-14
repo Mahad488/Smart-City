@@ -6,10 +6,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { CheckCircle2, XCircle, X } from "lucide-react";
+import { CheckCircle2, XCircle, Info, X } from "lucide-react";
 import "./Toast.css";
 
-type ToastType = "success" | "error";
+export type ToastType = "success" | "error" | "info";
 
 interface ToastProps {
   message: string;
@@ -35,6 +35,8 @@ function Toast({ message, type, onClose }: ToastProps) {
       <div className="toast-icon">
         {type === "success" ? (
           <CheckCircle2 size={20} />
+        ) : type === "info" ? (
+          <Info size={20} />
         ) : (
           <XCircle size={20} />
         )}
