@@ -11,23 +11,32 @@ dotenv.config({
 });
 
 // Connection Pool use karein jo automatic reconnect karta hai
-const pool = mysql.createPool({
-  host: process.env.MYSQLHOST || process.env.DB_HOST,
-  user: process.env.MYSQLUSER || process.env.DB_USER || "root",
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
-  database:
-    process.env.MYSQL_DATABASE ||
-    process.env.MYSQLDATABASE ||
-    process.env.DB_NAME,
-  port: Number(
-    process.env.MYSQLPORT ||
-    process.env.DB_PORT ||
-    3306
-  ),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const connectionUri = process.env.MYSQL_URL || process.env.DATABASE_URL;
+
+const pool = connectionUri
+  ? mysql.createPool({
+      uri: connectionUri,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    })
+  : mysql.createPool({
+      host: process.env.MYSQLHOST || process.env.DB_HOST,
+      user: process.env.MYSQLUSER || process.env.DB_USER || "root",
+      password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+      database:
+        process.env.MYSQL_DATABASE ||
+        process.env.MYSQLDATABASE ||
+        process.env.DB_NAME,
+      port: Number(
+        process.env.MYSQLPORT ||
+        process.env.DB_PORT ||
+        3306
+      ),
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
 
 const promisePool = pool.promise();
 
@@ -47,15 +56,20 @@ pool.query = (...args) => {
 
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error("MySQL connection failed:", err);
+    console.error("MySQL connection failed:", err.message);
+    if (err.code === "ER_ACCESS_DENIED_ERROR") {
+      console.error(
+        "⚠️ Access Denied (Error 1045): MySQL credentials rejected. Please verify MYSQLPASSWORD, MYSQLUSER, or MYSQL_URL."
+      );
+    }
     console.error("Config used:", {
-      host: process.env.MYSQLHOST || process.env.DB_HOST,
-      user: process.env.MYSQLUSER || process.env.DB_USER,
+      host: connectionUri ? "(via connection URI)" : (process.env.MYSQLHOST || process.env.DB_HOST),
+      user: process.env.MYSQLUSER || process.env.DB_USER || "root",
       database:
         process.env.MYSQL_DATABASE ||
         process.env.MYSQLDATABASE ||
         process.env.DB_NAME,
-      port: process.env.MYSQLPORT || process.env.DB_PORT,
+      port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
     });
     return;
   }
