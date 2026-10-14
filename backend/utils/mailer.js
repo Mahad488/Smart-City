@@ -20,9 +20,14 @@ export const sendViaResend = async ({ toEmail, subject, html, text }) => {
   const apiKey = (process.env.RESEND_API_KEY || "").trim();
   if (!apiKey) return null;
 
+  let rawFrom = (process.env.RESEND_FROM || "").trim();
+  // Strip any surrounding quotes that may have been pasted in .env or Railway (e.g. "Smart City <...>" -> Smart City <...>)
+  rawFrom = rawFrom.replace(/^["']+|["']+$/g, "").trim();
+
   const from =
-    process.env.RESEND_FROM ||
-    "Smart City Notification <onboarding@resend.dev>";
+    rawFrom && rawFrom.includes("@")
+      ? rawFrom
+      : "Smart City <onboarding@resend.dev>";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -41,7 +46,8 @@ export const sendViaResend = async ({ toEmail, subject, html, text }) => {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || data.error || "Failed to send email via Resend HTTPS API");
+    const errorDetails = typeof data === "object" ? JSON.stringify(data) : data;
+    throw new Error(data.message || data.error || errorDetails || "Failed to send email via Resend HTTPS API");
   }
   return { success: true, messageId: data.id, recipient: toEmail };
 };
