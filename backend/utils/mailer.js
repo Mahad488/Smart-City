@@ -1,14 +1,49 @@
 import nodemailer from "nodemailer";
 
 /**
- * Checks whether real SMTP credentials are configured in environment variables.
+ * Checks whether email delivery is configured in environment variables.
  */
 export const isSmtpConfigured = () => {
+  if (process.env.RESEND_API_KEY) return true;
   const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
   const rawPass =
     process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
   const pass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
   return Boolean(user && pass);
+};
+
+/**
+ * Sends email via Resend HTTPS API (Port 443).
+ * This completely bypasses cloud SMTP port blocking on Railway, Render, etc.
+ */
+export const sendViaResend = async ({ toEmail, subject, html, text }) => {
+  const apiKey = (process.env.RESEND_API_KEY || "").trim();
+  if (!apiKey) return null;
+
+  const from =
+    process.env.RESEND_FROM ||
+    "Smart City Notification <onboarding@resend.dev>";
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [toEmail],
+      subject,
+      html,
+      text,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || data.error || "Failed to send email via Resend HTTPS API");
+  }
+  return { success: true, messageId: data.id, recipient: toEmail };
 };
 
 /**
@@ -254,6 +289,25 @@ Best regards,
 Smart City Administration & Citizen Care
     `.trim();
 
+    // 1. Try Resend HTTPS API first (Bypasses Railway cloud SMTP port blocking)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resendRes = await sendViaResend({
+          toEmail,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+        if (resendRes?.success) {
+          console.log(`[Mailer - Resend HTTPS] Email successfully delivered to ${toEmail} for Complaint #${formattedId}`);
+          return resendRes;
+        }
+      } catch (resendErr) {
+        console.warn(`[Mailer - Resend HTTPS Notice]:`, resendErr.message);
+      }
+    }
+
+    // 2. Fallback to direct SMTP
     const mailOptions = {
       from: getFromAddress(),
       to: toEmail,
@@ -263,7 +317,7 @@ Smart City Administration & Citizen Care
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Mailer] Complaint status email dispatched to ${toEmail} for Complaint #${formattedId}`);
+    console.log(`[Mailer - SMTP] Complaint status email dispatched to ${toEmail} for Complaint #${formattedId}`);
     return { success: true, messageId: info.messageId, recipient: toEmail };
   } catch (error) {
     console.error(`[Mailer] Error sending complaint status email to ${toEmail}:`, error);
@@ -454,6 +508,25 @@ Emergency Hotlines: Rescue: 1122 | Police: 15 | Fire: 16
 Smart City Emergency Command & Dispatch Operations
     `.trim();
 
+    // 1. Try Resend HTTPS API first (Bypasses Railway cloud SMTP port blocking)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resendRes = await sendViaResend({
+          toEmail,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+        if (resendRes?.success) {
+          console.log(`[Mailer - Resend HTTPS] Email successfully delivered to ${toEmail} for Emergency #${formattedId}`);
+          return resendRes;
+        }
+      } catch (resendErr) {
+        console.warn(`[Mailer - Resend HTTPS Notice]:`, resendErr.message);
+      }
+    }
+
+    // 2. Fallback to direct SMTP
     const mailOptions = {
       from: getFromAddress(),
       to: toEmail,
@@ -463,7 +536,7 @@ Smart City Emergency Command & Dispatch Operations
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Mailer] Emergency status email dispatched to ${toEmail} for Emergency #${formattedId}`);
+    console.log(`[Mailer - SMTP] Emergency status email dispatched to ${toEmail} for Emergency #${formattedId}`);
     return { success: true, messageId: info.messageId, recipient: toEmail };
   } catch (error) {
     console.error(`[Mailer] Error sending emergency status email to ${toEmail}:`, error);
