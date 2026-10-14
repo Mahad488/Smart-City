@@ -296,7 +296,7 @@ router.post("/register", async (req, res) => {
     const [result] = await db.query(
       `INSERT INTO citizens
        (citizen_id, name, email, password_hash, phone, area, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'Pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, 'Active')`,
       [
         citizenId,
         name,
@@ -308,7 +308,7 @@ router.post("/register", async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Registration successful. Waiting for admin approval.",
+      message: "Registration successful",
       citizen: {
         id: result.insertId,
         citizen_id: citizenId,
@@ -316,7 +316,7 @@ router.post("/register", async (req, res) => {
         email,
         phone,
         area,
-        status: "Pending",
+        status: "Active",
       },
     });
   } catch (error) {
@@ -370,7 +370,7 @@ router.post("/", async (req, res) => {
       email,
       phone || null,
       area || null,
-      status || "Pending"
+      status || "Active"
     ]);
 
     res.status(201).json({

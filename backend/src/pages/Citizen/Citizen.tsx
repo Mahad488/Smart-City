@@ -614,76 +614,9 @@ function Citizen() {
                             <Eye size={16} />
                           </button>
 
-                          {/* PENDING / MANUAL REGISTER → ACTIVATE & DEACTIVATE */}
+                          {/* STATUS ACTION (SINGLE BUTTON) */}
 
-                          {(citizen.status === "Pending" ||
-                            (!citizen.status ||
-                              (citizen.status !== "Active" &&
-                                citizen.status !== "Inactive"))) && (
-                            <>
-                              <button
-                                className="action-btn approve"
-                                title="Activate Citizen"
-                                disabled={
-                                  actionLoading === citizen.id
-                                }
-                                onClick={() =>
-                                  activateCitizen(
-                                    citizen.id
-                                  )
-                                }
-                              >
-                                <UserCheck size={16} />
-                                <span>
-                                  Activate
-                                </span>
-                              </button>
-
-                              <button
-                                className="action-btn deactivate"
-                                title="Deactivate Citizen"
-                                disabled={
-                                  actionLoading === citizen.id
-                                }
-                                onClick={() =>
-                                  deactivateCitizen(
-                                    citizen.id
-                                  )
-                                }
-                              >
-                                <UserX size={16} />
-                                <span>
-                                  Deactivate
-                                </span>
-                              </button>
-                            </>
-                          )}
-
-                          {/* ACTIVE → DEACTIVATE */}
-
-                          {citizen.status === "Active" && (
-                            <button
-                              className="action-btn deactivate"
-                              title="Deactivate Citizen"
-                              disabled={
-                                actionLoading === citizen.id
-                              }
-                              onClick={() =>
-                                deactivateCitizen(
-                                  citizen.id
-                                )
-                              }
-                            >
-                              <UserX size={16} />
-                              <span>
-                                Deactivate
-                              </span>
-                            </button>
-                          )}
-
-                          {/* INACTIVE → ACTIVATE */}
-
-                          {citizen.status === "Inactive" && (
+                          {citizen.status === "Inactive" ? (
                             <button
                               className="action-btn approve"
                               title="Activate Citizen"
@@ -699,6 +632,24 @@ function Citizen() {
                               <UserCheck size={16} />
                               <span>
                                 Activate
+                              </span>
+                            </button>
+                          ) : (
+                            <button
+                              className="action-btn deactivate"
+                              title="Deactivate Citizen"
+                              disabled={
+                                actionLoading === citizen.id
+                              }
+                              onClick={() =>
+                                deactivateCitizen(
+                                  citizen.id
+                                )
+                              }
+                            >
+                              <UserX size={16} />
+                              <span>
+                                Deactivate
                               </span>
                             </button>
                           )}
@@ -878,50 +829,9 @@ function Citizen() {
 
               <div className="citizen-profile-actions">
 
-                {/* PENDING / MANUAL REGISTER → ACTIVATE & DEACTIVATE */}
+                {/* STATUS ACTION (SINGLE BUTTON) */}
 
-                {(selectedCitizen.status === "Pending" ||
-                  (!selectedCitizen.status ||
-                    (selectedCitizen.status !== "Active" &&
-                      selectedCitizen.status !== "Inactive"))) && (
-                  <>
-                    <button
-                      className="approve-citizen-btn"
-                      disabled={
-                        actionLoading === selectedCitizen.id
-                      }
-                      onClick={() =>
-                        activateCitizen(
-                          selectedCitizen.id
-                        )
-                      }
-                    >
-                      <UserCheck size={17} />
-
-                      Activate Citizen
-                    </button>
-
-                    <button
-                      className="deactivate-citizen-btn"
-                      disabled={
-                        actionLoading === selectedCitizen.id
-                      }
-                      onClick={() =>
-                        deactivateCitizen(
-                          selectedCitizen.id
-                        )
-                      }
-                    >
-                      <UserX size={17} />
-
-                      Deactivate Citizen
-                    </button>
-                  </>
-                )}
-
-                {/* INACTIVE → ACTIVATE */}
-
-                {selectedCitizen.status === "Inactive" && (
+                {selectedCitizen.status === "Inactive" ? (
                   <button
                     className="approve-citizen-btn"
                     disabled={
@@ -937,11 +847,7 @@ function Citizen() {
 
                     Activate Citizen
                   </button>
-                )}
-
-                {/* ACTIVE → DEACTIVATE */}
-
-                {selectedCitizen.status === "Active" && (
+                ) : (
                   <button
                     className="deactivate-citizen-btn"
                     disabled={

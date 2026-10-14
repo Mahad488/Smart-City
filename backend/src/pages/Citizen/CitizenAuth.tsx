@@ -118,7 +118,7 @@ function CitizenAuth() {
       }
 
       setMessage(
-        "Registration submitted successfully. Please wait for admin approval."
+        "Registration successful! You can now login."
       );
 
       // Clear form
@@ -134,7 +134,7 @@ function CitizenAuth() {
       setTimeout(() => {
         setMode("login");
         setMessage(
-          "Your account is pending admin approval."
+          "Account created successfully! Please login with your credentials."
         );
       }, 1500);
 
@@ -416,8 +416,7 @@ function CitizenAuth() {
             </button>
 
             <p className="auth-note">
-              Your account will remain pending until an
-              administrator approves it.
+              Create your account to submit complaints, report emergencies and track updates.
             </p>
 
             <p className="auth-switch-text">
