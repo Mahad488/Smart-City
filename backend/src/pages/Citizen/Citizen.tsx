@@ -25,7 +25,7 @@ type CitizenRecord = {
   phone?: string;
   area?: string;
   registered_at?: string;
-  status?: "Active" | "Inactive";
+  status?: "Active" | "Inactive" | "Pending";
 };
 
 function Citizen() {
@@ -48,6 +48,7 @@ function Citizen() {
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
+    pending: 0,
     inactive: 0,
   });
 
@@ -93,6 +94,7 @@ function Citizen() {
       setStats({
         total: Number(data.total) || 0,
         active: Number(data.active) || 0,
+        pending: Number(data.pending) || 0,
         inactive: Number(data.inactive) || 0,
       });
     } catch (error) {
@@ -372,9 +374,29 @@ function Citizen() {
             </div>
           </div>
 
-          {/* INACTIVE */}
+          {/* PENDING */}
 
           <div className="citizen-stat orange">
+            <div className="citizen-stat-icon">
+              <RefreshCw size={22} />
+            </div>
+
+            <div>
+              <span>Pending Citizens</span>
+
+              <strong>
+                {stats.pending.toLocaleString()}
+              </strong>
+
+              <small>
+                Awaiting approval
+              </small>
+            </div>
+          </div>
+
+          {/* INACTIVE */}
+
+          <div className="citizen-stat purple">
             <div className="citizen-stat-icon">
               <UserX size={22} />
             </div>
@@ -439,6 +461,7 @@ function Citizen() {
             >
               <option>All Status</option>
               <option>Active</option>
+              <option>Pending</option>
               <option>Inactive</option>
             </select>
 
@@ -590,6 +613,51 @@ function Citizen() {
                           >
                             <Eye size={16} />
                           </button>
+
+                          {/* PENDING / MANUAL REGISTER → ACTIVATE & DEACTIVATE */}
+
+                          {(citizen.status === "Pending" ||
+                            (!citizen.status ||
+                              (citizen.status !== "Active" &&
+                                citizen.status !== "Inactive"))) && (
+                            <>
+                              <button
+                                className="action-btn approve"
+                                title="Activate Citizen"
+                                disabled={
+                                  actionLoading === citizen.id
+                                }
+                                onClick={() =>
+                                  activateCitizen(
+                                    citizen.id
+                                  )
+                                }
+                              >
+                                <UserCheck size={16} />
+                                <span>
+                                  Activate
+                                </span>
+                              </button>
+
+                              <button
+                                className="action-btn deactivate"
+                                title="Deactivate Citizen"
+                                disabled={
+                                  actionLoading === citizen.id
+                                }
+                                onClick={() =>
+                                  deactivateCitizen(
+                                    citizen.id
+                                  )
+                                }
+                              >
+                                <UserX size={16} />
+                                <span>
+                                  Deactivate
+                                </span>
+                              </button>
+                            </>
+                          )}
 
                           {/* ACTIVE → DEACTIVATE */}
 
@@ -798,7 +866,9 @@ function Citizen() {
                   <strong>
                     {selectedCitizen.status === "Active"
                       ? "Allowed"
-                      : "Blocked"}
+                      : selectedCitizen.status === "Pending"
+                        ? "Pending Approval"
+                        : "Blocked"}
                   </strong>
                 </div>
 
@@ -807,6 +877,47 @@ function Citizen() {
               {/* MODAL ACTIONS */}
 
               <div className="citizen-profile-actions">
+
+                {/* PENDING / MANUAL REGISTER → ACTIVATE & DEACTIVATE */}
+
+                {(selectedCitizen.status === "Pending" ||
+                  (!selectedCitizen.status ||
+                    (selectedCitizen.status !== "Active" &&
+                      selectedCitizen.status !== "Inactive"))) && (
+                  <>
+                    <button
+                      className="approve-citizen-btn"
+                      disabled={
+                        actionLoading === selectedCitizen.id
+                      }
+                      onClick={() =>
+                        activateCitizen(
+                          selectedCitizen.id
+                        )
+                      }
+                    >
+                      <UserCheck size={17} />
+
+                      Activate Citizen
+                    </button>
+
+                    <button
+                      className="deactivate-citizen-btn"
+                      disabled={
+                        actionLoading === selectedCitizen.id
+                      }
+                      onClick={() =>
+                        deactivateCitizen(
+                          selectedCitizen.id
+                        )
+                      }
+                    >
+                      <UserX size={17} />
+
+                      Deactivate Citizen
+                    </button>
+                  </>
+                )}
 
                 {/* INACTIVE → ACTIVATE */}
 
