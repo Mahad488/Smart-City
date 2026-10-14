@@ -54,6 +54,27 @@ app.use(express.urlencoded({ extended: true }));
 let databaseInitialized = false;
 let databaseInitializationPromise = null;
 
+const ensureAdminSettingsTable = async () => {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        admin_id INT PRIMARY KEY,
+        language VARCHAR(50) DEFAULT 'English',
+        timezone VARCHAR(100) DEFAULT 'Pakistan Standard Time',
+        date_format VARCHAR(30) DEFAULT 'DD/MM/YYYY',
+        dashboard_refresh VARCHAR(30) DEFAULT '5 Minutes',
+        two_factor_enabled BOOLEAN DEFAULT FALSE,
+        CONSTRAINT fk_admin_settings_admin
+          FOREIGN KEY (admin_id)
+          REFERENCES admins(id)
+          ON DELETE CASCADE
+      )
+    `);
+  } catch (err) {
+    console.warn("Notice admin_settings table:", err.message);
+  }
+};
+
 const ensureDatabaseSchema = async () => {
   await ensureAdminSettingsTable();
 
