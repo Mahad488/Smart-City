@@ -389,27 +389,26 @@ router.put("/:id", async (req, res) => {
     }
 
     let emailDispatched = false;
-    let mailSendResult = null;
 
     if (status && status !== previousStatus && recipientEmail) {
-      try {
-        mailSendResult = await sendEmergencyStatusEmail({
-          toEmail: recipientEmail,
-          citizenName: resolvedCitizenName,
-          emergencyId: req.params.id,
-          emergencyType: type || existingEmergency.type,
-          location: location || existingEmergency.location,
-          team: team || existingEmergency.team,
-          priority: priority || existingEmergency.priority,
-          previousStatus,
-          newStatus: status,
+      emailDispatched = true;
+      sendEmergencyStatusEmail({
+        toEmail: recipientEmail,
+        citizenName: resolvedCitizenName,
+        emergencyId: req.params.id,
+        emergencyType: type || existingEmergency.type,
+        location: location || existingEmergency.location,
+        team: team || existingEmergency.team,
+        priority: priority || existingEmergency.priority,
+        previousStatus,
+        newStatus: status,
+      })
+        .then((res) => {
+          console.log(`[Emergencies] Email dispatched to ${recipientEmail} for EMG-${req.params.id}:`, res?.messageId || res);
+        })
+        .catch((mailErr) => {
+          console.error(`[Emergencies] Email dispatch error for EMG-${req.params.id}:`, mailErr.message);
         });
-        emailDispatched = mailSendResult?.success === true;
-        console.log(`[Emergencies] Email result for EMG-${req.params.id}:`, mailSendResult);
-      } catch (mailErr) {
-        console.error("Background emergency email send error:", mailErr);
-        mailSendResult = { success: false, error: mailErr.message };
-      }
 
       // Also record system notification
       try {
@@ -429,7 +428,6 @@ router.put("/:id", async (req, res) => {
     res.json({
       message: "Emergency updated successfully",
       emailSent: emailDispatched,
-      mailResult: mailSendResult,
       recipient: recipientEmail || null,
       smtpConfigured: isSmtpConfigured(),
       previousStatus,

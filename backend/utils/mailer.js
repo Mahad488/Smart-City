@@ -24,7 +24,7 @@ export const isSmtpConfigured = () => {
  */
 export const createMailerTransporter = () => {
   const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-  const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587);
+  const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 465);
   const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
   const rawPass =
     process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
@@ -34,32 +34,18 @@ export const createMailerTransporter = () => {
     process.env.SMTP_SECURE === "true" || port === 465;
 
   if (user && pass) {
-    if (
-      service === "gmail" ||
-      (user && user.toLowerCase().endsWith("@gmail.com")) ||
-      (!host && !service)
-    ) {
-      console.log(`[Mailer] Initializing direct Gmail transporter for ${user}`);
-      return nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user,
-          pass,
-        },
-      });
-    }
-
-    console.log(
-      `[Mailer] Initializing custom SMTP transporter (${host || "smtp.gmail.com"}:${port}) for ${user}`
-    );
+    console.log(`[Mailer] Initializing direct Gmail SSL (smtp.gmail.com:465) for ${user}`);
     return nodemailer.createTransport({
       host: host || "smtp.gmail.com",
-      port,
-      secure,
+      port: host ? port : 465,
+      secure: host ? secure : true,
       auth: {
         user,
         pass,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
   }
 
