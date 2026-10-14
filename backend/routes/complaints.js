@@ -1,5 +1,6 @@
 import express from "express";
 import db from "../config/db.js";
+import { sendComplaintStatusEmail } from "../utils/mailer.js";
 
 const router = express.Router();
 
@@ -10,9 +11,10 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT *
-       FROM complaints
-       ORDER BY created_at DESC`
+      `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
+       FROM complaints c
+       LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
+       ORDER BY c.created_at DESC`
     );
 
     res.json(rows);
@@ -336,7 +338,27 @@ router.put("/:id", async (req, res) => {
       status,
       latitude,
       longitude,
+      citizen_email,
+      citizen_name,
     } = req.body;
+
+    // Fetch existing complaint with citizen details
+    const [existingRows] = await db.query(
+      `SELECT c.*, cz.name AS citizen_name, cz.email AS citizen_email
+       FROM complaints c
+       LEFT JOIN citizens cz ON (c.citizen_id = cz.citizen_id OR c.citizen_id = CAST(cz.id AS CHAR))
+       WHERE c.id = ?`,
+      [req.params.id]
+    );
+
+    if (!existingRows || existingRows.length === 0) {
+      return res.status(404).json({
+        message: "Complaint not found",
+      });
+    }
+
+    const existingComplaint = existingRows[0];
+    const previousStatus = existingComplaint.status;
 
     const [result] = await db.query(
       `UPDATE complaints
@@ -349,13 +371,13 @@ router.put("/:id", async (req, res) => {
            longitude = ?
        WHERE id = ?`,
       [
-        category,
-        description,
-        location,
-        priority,
-        status,
-        latitude ?? null,
-        longitude ?? null,
+        category ?? existingComplaint.category,
+        description ?? existingComplaint.description,
+        location ?? existingComplaint.location,
+        priority ?? existingComplaint.priority,
+        status ?? existingComplaint.status,
+        latitude ?? existingComplaint.latitude ?? null,
+        longitude ?? existingComplaint.longitude ?? null,
         req.params.id,
       ]
     );
@@ -366,8 +388,49 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    // Check if status has changed and trigger notification email in English
+    let emailDispatched = false;
+    const recipientEmail = citizen_email || existingComplaint.citizen_email;
+    const resolvedCitizenName =
+      citizen_name || existingComplaint.citizen_name || "Valued Citizen";
+
+    if (status && status !== previousStatus && recipientEmail) {
+      emailDispatched = true;
+      sendComplaintStatusEmail({
+        toEmail: recipientEmail,
+        citizenName: resolvedCitizenName,
+        complaintId: req.params.id,
+        category: category || existingComplaint.category,
+        location: location || existingComplaint.location,
+        priority: priority || existingComplaint.priority,
+        previousStatus,
+        newStatus: status,
+        description: description || existingComplaint.description,
+      }).catch((mailErr) => {
+        console.error("Background complaint email send error:", mailErr);
+      });
+
+      // Also record system notification
+      try {
+        await db.query(
+          `INSERT INTO notifications (title, message, type)
+           VALUES (?, ?, 'Complaint')`,
+          [
+            `Complaint #${req.params.id} Status: ${status}`,
+            `Complaint CMP-${String(req.params.id).padStart(4, "0")} (${category || existingComplaint.category}) status changed to "${status}". Notification dispatched to ${recipientEmail}.`,
+          ]
+        );
+      } catch (notifErr) {
+        console.warn("Could not insert notification:", notifErr.message);
+      }
+    }
+
     res.json({
       message: "Complaint updated successfully",
+      emailSent: emailDispatched,
+      recipient: recipientEmail || null,
+      previousStatus,
+      newStatus: status,
     });
 
   } catch (error) {

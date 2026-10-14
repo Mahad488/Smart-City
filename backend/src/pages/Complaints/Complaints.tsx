@@ -17,6 +17,8 @@ import {
   ChevronRight,
   ArrowRight,
   Filter,
+  User,
+  Mail,
 } from "lucide-react";
 
 import ConfirmModal from "../../components/ConfirmModal";
@@ -25,6 +27,10 @@ import "./Complaints.css";
 
 interface Complaint {
   id: number;
+  citizen_id?: string | number | null;
+  citizen_name?: string | null;
+  citizen_email?: string | null;
+  citizen_phone?: string | null;
   category: string;
   description: string;
   location: string;
@@ -215,12 +221,16 @@ const Complaints: React.FC = () => {
           location: complaint.location,
           priority: complaint.priority,
           status: nextStatus,
+          citizen_email: complaint.citizen_email,
+          citizen_name: complaint.citizen_name,
         }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to update status");
       }
+
+      const resData = await response.json().catch(() => ({}));
 
       setComplaints((prev) =>
         prev.map((c) => (c.id === complaint.id ? { ...c, status: nextStatus } : c))
@@ -230,7 +240,14 @@ const Complaints: React.FC = () => {
         setSelectedComplaint({ ...selectedComplaint, status: nextStatus });
       }
 
-      showToast(`Complaint moved to ${nextStatus}`, "success");
+      if (resData?.emailSent && resData?.recipient) {
+        showToast(
+          `Complaint moved to ${nextStatus}. Email sent to ${resData.recipient}`,
+          "success"
+        );
+      } else {
+        showToast(`Complaint moved to ${nextStatus}`, "success");
+      }
     } catch (err) {
       console.error("Status update error:", err);
       showToast("Failed to update status", "error");
@@ -308,6 +325,8 @@ const Complaints: React.FC = () => {
           location: editingComplaint.location,
           priority: editingComplaint.priority,
           status: editingComplaint.status,
+          citizen_email: editingComplaint.citizen_email,
+          citizen_name: editingComplaint.citizen_name,
         }),
       });
 
@@ -315,11 +334,21 @@ const Complaints: React.FC = () => {
         throw new Error("Failed to update complaint");
       }
 
+      const resData = await response.json().catch(() => ({}));
+
       await fetchComplaints(true);
 
       setShowEditModal(false);
       setEditingComplaint(null);
-      showToast("Complaint updated successfully!", "success");
+
+      if (resData?.emailSent && resData?.recipient) {
+        showToast(
+          `Complaint updated! Status email sent to ${resData.recipient}`,
+          "success"
+        );
+      } else {
+        showToast("Complaint updated successfully!", "success");
+      }
     } catch (err) {
       console.error("Edit complaint error:", err);
       showToast("Error updating complaint", "error");
@@ -664,6 +693,11 @@ const Complaints: React.FC = () => {
                           <span className="complaint-id-tag">
                             {formatComplaintId(complaint.id)}
                           </span>
+                          {complaint.citizen_name && (
+                            <span className="complaint-citizen-tag" title={complaint.citizen_email || ""}>
+                              👤 {complaint.citizen_name}
+                            </span>
+                          )}
                           <p className="complaint-description-snippet" title={complaint.description}>
                             {complaint.description}
                           </p>
@@ -946,6 +980,28 @@ const Complaints: React.FC = () => {
                 <label>Priority Level</label>
                 <div className="detail-value-box">
                   <span>{selectedComplaint.priority}</span>
+                </div>
+              </div>
+
+              <div className="detail-row">
+                <label>Reported By (Citizen)</label>
+                <div className="detail-value-box">
+                  <User size={14} />
+                  <span>{selectedComplaint.citizen_name || "Citizen (Self-Service)"}</span>
+                </div>
+              </div>
+
+              <div className="detail-row">
+                <label>Notification Email</label>
+                <div className="detail-value-box">
+                  <Mail size={14} />
+                  <span>
+                    {selectedComplaint.citizen_email ? (
+                      <strong>{selectedComplaint.citizen_email}</strong>
+                    ) : (
+                      <em style={{ color: "#94a3b8" }}>No email registered</em>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>

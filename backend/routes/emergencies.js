@@ -1,5 +1,6 @@
 import express from "express";
 import db from "../config/db.js";
+import { sendEmergencyStatusEmail } from "../utils/mailer.js";
 
 const router = express.Router();
 
@@ -10,9 +11,10 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT *
-       FROM emergencies
-       ORDER BY id DESC`
+      `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email, cz.phone AS citizen_phone
+       FROM emergencies e
+       LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
+       ORDER BY e.id DESC`
     );
 
     res.json(rows);
@@ -281,7 +283,27 @@ router.put("/:id", async (req, res) => {
       status,
       latitude,
       longitude,
+      citizen_email,
+      citizen_name,
     } = req.body;
+
+    // Fetch existing emergency with citizen details
+    const [existingRows] = await db.query(
+      `SELECT e.*, cz.name AS citizen_name, cz.email AS citizen_email
+       FROM emergencies e
+       LEFT JOIN citizens cz ON (e.citizen_id = cz.citizen_id OR e.citizen_id = CAST(cz.id AS CHAR))
+       WHERE e.id = ?`,
+      [req.params.id]
+    );
+
+    if (!existingRows || existingRows.length === 0) {
+      return res.status(404).json({
+        message: "Emergency not found",
+      });
+    }
+
+    const existingEmergency = existingRows[0];
+    const previousStatus = existingEmergency.status;
 
     const [result] = await db.query(
       `UPDATE emergencies
@@ -294,13 +316,13 @@ router.put("/:id", async (req, res) => {
            longitude = ?
        WHERE id = ?`,
       [
-        type,
-        location,
-        team,
-        priority,
-        status,
-        latitude ?? null,
-        longitude ?? null,
+        type ?? existingEmergency.type,
+        location ?? existingEmergency.location,
+        team ?? existingEmergency.team,
+        priority ?? existingEmergency.priority,
+        status ?? existingEmergency.status,
+        latitude ?? existingEmergency.latitude ?? null,
+        longitude ?? existingEmergency.longitude ?? null,
         req.params.id,
       ]
     );
@@ -311,8 +333,49 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    // Check if status has changed and trigger notification email in English
+    let emailDispatched = false;
+    const recipientEmail = citizen_email || existingEmergency.citizen_email;
+    const resolvedCitizenName =
+      citizen_name || existingEmergency.citizen_name || "Valued Citizen";
+
+    if (status && status !== previousStatus && recipientEmail) {
+      emailDispatched = true;
+      sendEmergencyStatusEmail({
+        toEmail: recipientEmail,
+        citizenName: resolvedCitizenName,
+        emergencyId: req.params.id,
+        emergencyType: type || existingEmergency.type,
+        location: location || existingEmergency.location,
+        team: team || existingEmergency.team,
+        priority: priority || existingEmergency.priority,
+        previousStatus,
+        newStatus: status,
+      }).catch((mailErr) => {
+        console.error("Background emergency email send error:", mailErr);
+      });
+
+      // Also record system notification
+      try {
+        await db.query(
+          `INSERT INTO notifications (title, message, type)
+           VALUES (?, ?, 'Emergency')`,
+          [
+            `Emergency #${req.params.id} Status: ${status}`,
+            `Emergency EMG-${String(req.params.id).padStart(4, "0")} (${type || existingEmergency.type}) status updated to "${status}". Notification dispatched to ${recipientEmail}.`,
+          ]
+        );
+      } catch (notifErr) {
+        console.warn("Could not insert notification:", notifErr.message);
+      }
+    }
+
     res.json({
       message: "Emergency updated successfully",
+      emailSent: emailDispatched,
+      recipient: recipientEmail || null,
+      previousStatus,
+      newStatus: status,
     });
 
   } catch (error) {

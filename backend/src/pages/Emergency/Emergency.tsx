@@ -18,6 +18,7 @@ import {
   Users,
   Flame,
   ArrowRight,
+  Mail,
 } from "lucide-react";
 
 import ConfirmModal from "../../components/ConfirmModal";
@@ -26,6 +27,10 @@ import "./Emergency.css";
 
 interface Emergency {
   id: number;
+  citizen_id?: string | number | null;
+  citizen_name?: string | null;
+  citizen_email?: string | null;
+  citizen_phone?: string | null;
   type: string;
   location: string;
   team: string | null;
@@ -224,12 +229,16 @@ const Emergency: React.FC = () => {
           team: emergency.team,
           priority: emergency.priority,
           status: nextStatus,
+          citizen_email: emergency.citizen_email,
+          citizen_name: emergency.citizen_name,
         }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to update emergency status");
       }
+
+      const resData = await response.json().catch(() => ({}));
 
       setEmergencies((prev) =>
         prev.map((item) =>
@@ -241,7 +250,14 @@ const Emergency: React.FC = () => {
         setSelectedEmergency({ ...selectedEmergency, status: nextStatus });
       }
 
-      showToast(`Emergency incident marked as ${nextStatus}`, "success");
+      if (resData?.emailSent && resData?.recipient) {
+        showToast(
+          `Incident marked as ${nextStatus}. Email dispatched to ${resData.recipient}`,
+          "success"
+        );
+      } else {
+        showToast(`Emergency incident marked as ${nextStatus}`, "success");
+      }
     } catch (err) {
       console.error("Status update error:", err);
       showToast("Failed to update status", "error");
@@ -314,6 +330,8 @@ const Emergency: React.FC = () => {
           team: editingEmergency.team,
           priority: editingEmergency.priority,
           status: editingEmergency.status,
+          citizen_email: editingEmergency.citizen_email,
+          citizen_name: editingEmergency.citizen_name,
         }),
       });
 
@@ -321,11 +339,21 @@ const Emergency: React.FC = () => {
         throw new Error("Failed to update emergency");
       }
 
+      const resData = await response.json().catch(() => ({}));
+
       await fetchEmergencies(true);
 
       setShowEditModal(false);
       setEditingEmergency(null);
-      showToast("Emergency details updated!", "success");
+
+      if (resData?.emailSent && resData?.recipient) {
+        showToast(
+          `Emergency updated! Incident email dispatched to ${resData.recipient}`,
+          "success"
+        );
+      } else {
+        showToast("Emergency details updated!", "success");
+      }
     } catch (err) {
       console.error("Edit emergency error:", err);
       showToast("Error updating emergency", "error");
@@ -717,6 +745,11 @@ const Emergency: React.FC = () => {
                           <strong className="emg-type-title">
                             {emergency.type}
                           </strong>
+                          {emergency.citizen_name && (
+                            <span className="emg-citizen-tag" title={emergency.citizen_email || ""}>
+                              👤 {emergency.citizen_name}
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -1001,6 +1034,28 @@ const Emergency: React.FC = () => {
                 <div className="detail-value-box">
                   <span className={`emg-priority-badge priority-${selectedEmergency.priority.toLowerCase()}`}>
                     {selectedEmergency.priority}
+                  </span>
+                </div>
+              </div>
+
+              <div className="detail-row">
+                <label>Reported By (Citizen / Caller)</label>
+                <div className="detail-value-box">
+                  <Users size={14} />
+                  <span>{selectedEmergency.citizen_name || "Emergency Caller (Citizen)"}</span>
+                </div>
+              </div>
+
+              <div className="detail-row">
+                <label>Notification Email</label>
+                <div className="detail-value-box">
+                  <Mail size={14} />
+                  <span>
+                    {selectedEmergency.citizen_email ? (
+                      <strong>{selectedEmergency.citizen_email}</strong>
+                    ) : (
+                      <em style={{ color: "#94a3b8" }}>No email registered</em>
+                    )}
                   </span>
                 </div>
               </div>
