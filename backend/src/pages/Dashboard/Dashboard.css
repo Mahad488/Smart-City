@@ -94,12 +94,29 @@
   min-height: 112px;
   background: white;
   border: 1px solid #e4edf5;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 17px;
   display: flex;
   align-items: center;
   gap: 13px;
   box-shadow: 0 2px 8px rgba(26, 60, 90, 0.03);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s ease;
+  user-select: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(26, 60, 90, 0.08);
+}
+
+.stat-card:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .stat-icon {
@@ -110,6 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
 }
 
 .stat-card.blue .stat-icon {
@@ -117,9 +135,27 @@
   color: #1976df;
 }
 
+.stat-card.blue:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 8px 20px rgba(25, 118, 223, 0.12);
+}
+
+.stat-card.blue:hover .stat-icon {
+  transform: scale(1.08);
+}
+
 .stat-card.red .stat-icon {
   background: #ffe8e8;
   color: #ef4444;
+}
+
+.stat-card.red:hover {
+  border-color: #fca5a5;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.12);
+}
+
+.stat-card.red:hover .stat-icon {
+  transform: scale(1.08);
 }
 
 .stat-card.green .stat-icon {
@@ -127,9 +163,27 @@
   color: #18a66b;
 }
 
+.stat-card.green:hover {
+  border-color: #86efac;
+  box-shadow: 0 8px 20px rgba(24, 166, 107, 0.12);
+}
+
+.stat-card.green:hover .stat-icon {
+  transform: scale(1.08);
+}
+
 .stat-card.purple .stat-icon {
   background: #eee7ff;
   color: #7b4ed1;
+}
+
+.stat-card.purple:hover {
+  border-color: #d8b4fe;
+  box-shadow: 0 8px 20px rgba(123, 78, 209, 0.12);
+}
+
+.stat-card.purple:hover .stat-icon {
+  transform: scale(1.08);
 }
 
 .stat-card.cyan .stat-icon {
@@ -137,10 +191,20 @@
   color: #129da1;
 }
 
+.stat-card.cyan:hover {
+  border-color: #67e8f9;
+  box-shadow: 0 8px 20px rgba(18, 157, 161, 0.12);
+}
+
+.stat-card.cyan:hover .stat-icon {
+  transform: scale(1.08);
+}
+
 .stat-content {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .stat-content > span {
@@ -162,6 +226,23 @@
   gap: 3px;
   color: #13a56d;
   font-size: 10px;
+}
+
+.stat-arrow {
+  margin-left: auto;
+  color: #94a3b8;
+  opacity: 0.5;
+  transform: translateX(-2px);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card:hover .stat-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+  color: #102c4c;
 }
 
 /* =========================

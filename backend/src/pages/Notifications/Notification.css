@@ -44,8 +44,26 @@
   font-size: 10px;
 }
 
-.notification-header-actions button:hover {
+.notification-header-actions button:hover:not(:disabled) {
   background: #f5f8fb;
+}
+
+.notification-header-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spin-icon {
+  animation: spin-kf 1s linear infinite;
+}
+
+@keyframes spin-kf {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Stats */

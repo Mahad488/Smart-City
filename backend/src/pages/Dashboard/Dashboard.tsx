@@ -18,6 +18,7 @@ import {
   Search,
   ArrowUpRight,
   ArrowDownRight,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -411,6 +412,7 @@ function Dashboard() {
       icon: Users,
       type: "blue",
       up: true,
+      path: "/citizens",
     },
     {
       title: "Total Complaints",
@@ -422,6 +424,7 @@ function Dashboard() {
       icon: MessageSquareWarning,
       type: "red",
       up: true,
+      path: "/complaints",
     },
     {
       title: "Active Departments",
@@ -433,6 +436,7 @@ function Dashboard() {
       icon: Building2,
       type: "green",
       up: true,
+      path: "/departments",
     },
     {
       title: "Public Assets",
@@ -444,6 +448,7 @@ function Dashboard() {
       icon: Boxes,
       type: "purple",
       up: true,
+      path: "/assets",
     },
     {
       title: "Emergencies",
@@ -455,6 +460,7 @@ function Dashboard() {
       icon: AlertTriangle,
       type: "cyan",
       up: true,
+      path: "/emergency",
     },
   ];
 
@@ -509,7 +515,13 @@ function Dashboard() {
           const Icon = stat.icon;
 
           return (
-            <div className={`stat-card ${stat.type}`} key={stat.title}>
+            <Link
+              to={stat.path}
+              className={`stat-card ${stat.type}`}
+              key={stat.title}
+              title={`Go to ${stat.title}`}
+              role="button"
+            >
               <div className="stat-icon">
                 <Icon size={22} />
               </div>
@@ -528,7 +540,11 @@ function Dashboard() {
                   {stat.change} {stat.text}
                 </small>
               </div>
-            </div>
+
+              <div className="stat-arrow">
+                <ChevronRight size={16} />
+              </div>
+            </Link>
           );
         })}
       </section>

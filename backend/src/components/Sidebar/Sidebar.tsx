@@ -72,36 +72,45 @@ function Sidebar() {
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
-    const updateNotificationCount = () => {
+    const fetchNotificationCount = async () => {
       try {
-        const savedNotifications = localStorage.getItem(
-          "smartcity_notifications"
+        const response = await fetch(
+          "https://smart-city-production-c48b.up.railway.app/api/notifications"
         );
 
-        if (!savedNotifications) {
-          setNotificationCount(0);
-          return;
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const unread = data.filter(
+            (n: { is_read?: boolean | number }) => !n.is_read
+          ).length;
+          setNotificationCount(unread);
         }
-
-        const parsed = JSON.parse(savedNotifications);
-        setNotificationCount(
-          Array.isArray(parsed) ? parsed.length : 0
-        );
-      } catch {
-        setNotificationCount(0);
+      } catch (error) {
+        console.error("Error fetching notification count for sidebar:", error);
       }
     };
 
-    updateNotificationCount();
+    void fetchNotificationCount();
+
+    // Auto-refresh sidebar count every 10 seconds
+    const interval = setInterval(fetchNotificationCount, 10000);
+
+    const handleUpdate = () => {
+      void fetchNotificationCount();
+    };
+
     window.addEventListener(
       "smartcity-notifications-updated",
-      updateNotificationCount
+      handleUpdate
     );
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener(
         "smartcity-notifications-updated",
-        updateNotificationCount
+        handleUpdate
       );
     };
   }, []);
@@ -137,7 +146,7 @@ function Sidebar() {
               <Icon size={19} strokeWidth={2} />
               <span>{item.label}</span>
 
-              {item.label === "Notifications" && (
+              {item.label === "Notifications" && notificationCount > 0 && (
                 <span className="notification-badge">
                   {notificationCount}
                 </span>

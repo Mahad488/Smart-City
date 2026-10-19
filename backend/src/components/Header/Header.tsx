@@ -66,7 +66,12 @@ function Header() {
     // Refresh notifications every 10 seconds
     const interval = setInterval(refreshNotifications, 10000);
 
-    return () => clearInterval(interval);
+    window.addEventListener("smartcity-notifications-updated", refreshNotifications);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("smartcity-notifications-updated", refreshNotifications);
+    };
   }, [fetchNotifications]);
 
   // Count unread notifications
@@ -91,6 +96,8 @@ function Header() {
             : notification
         )
       );
+
+      window.dispatchEvent(new Event("smartcity-notifications-updated"));
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -109,6 +116,8 @@ function Header() {
       setNotifications((prev) =>
         prev.filter((notification) => notification.id !== id)
       );
+
+      window.dispatchEvent(new Event("smartcity-notifications-updated"));
     } catch (error) {
       console.error("Error deleting notification:", error);
     }
