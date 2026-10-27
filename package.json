@@ -1,5 +1,13 @@
 {
-  "devDependencies": {
-    "vite": "^8.3.1"
+  "name": "smart-city",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "server": "npm --prefix backend start",
+    "backend": "npm --prefix backend start",
+    "start": "npm --prefix backend start",
+    "build": "npm --prefix frontend run build"
   }
 }

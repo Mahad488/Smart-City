@@ -1,78 +1,91 @@
-# React + TypeScript + Vite
+# Smart City Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern smart city administration and citizen engagement platform built with **React + TypeScript + Vite** on the frontend and **Node.js + Express + MySQL** on the backend.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📁 Project Structure (Folder Organization)
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+Smart-City-main/
+├── backend/                  # Node.js + Express API Backend
+│   ├── config/              # Database connection pool (db.js)
+│   ├── routes/              # Express API Routes (admin, complaints, emergencies, etc.)
+│   ├── utils/               # Helper utilities (mailer, etc.)
+│   ├── .env                 # Environment variables (MySQL & Port config)
+│   ├── .env.example         # Example environment config
+│   ├── server.js            # Express server entry point
+│   └── package.json         # Backend dependencies & scripts
+│
+├── frontend/                 # React + TypeScript + Vite Frontend
+│   ├── src/                 # React source code
+│   │   ├── components/      # UI components (Header, Sidebar, Modals, etc.)
+│   │   ├── pages/           # Pages (Dashboard, Complaints, GIS, Citizens, etc.)
+│   │   ├── config/api.ts    # Centralized API base URL config
+│   │   ├── App.tsx          # Router and application shell
+│   │   └── main.tsx         # React root mounting
+│   ├── index.html           # Single page application HTML template
+│   ├── vite.config.ts       # Vite build & plugin configuration
+│   └── package.json         # Frontend dependencies & scripts
+│
+└── package.json             # Root runner scripts
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Running the Project
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Option A: From Root Directory
 
+- **Run Frontend:**
+  ```powershell
+  npm run dev
+  # or: npm run frontend
+  ```
+- **Run Backend:**
+  ```powershell
+  npm run server
+  # or: npm run backend
+  ```
+
+### Option B: From Individual Folders
+
+- **Frontend (`frontend/`):**
+  ```powershell
+  cd frontend
+  npm run dev
+  ```
+- **Backend (`backend/`):**
+  ```powershell
+  cd backend
+  npm start
+  ```
+
+---
+
+## ⚙️ Environment Configuration
+
+Backend configuration file is located at `backend/.env`:
+
+```env
+PORT=5000
+MYSQLHOST=127.0.0.1
+MYSQLPORT=3306
+MYSQLUSER=root
+MYSQLPASSWORD=your_password
+MYSQLDATABASE=smart_city
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=smart_city
 ```
+
+---
+
+## 🌐 Localhost URLs
+
+- **Frontend Web App:** [http://localhost:5174/](http://localhost:5174/) (or [http://localhost:5173/](http://localhost:5173/))
+- **Backend API:** [http://localhost:5000/](http://localhost:5000/)
+- **API Health Check:** [http://localhost:5000/health](http://localhost:5000/health)

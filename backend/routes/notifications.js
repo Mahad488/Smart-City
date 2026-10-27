@@ -59,28 +59,6 @@ router.post("/", (req, res) => {
 });
 
 
-// Mark all notifications as read
-router.put("/read-all", (req, res) => {
-    const sql = `
-        UPDATE notifications
-        SET is_read = TRUE
-    `;
-
-    db.query(sql, (err) => {
-        if (err) {
-            console.error("Error marking all notifications as read:", err);
-            return res.status(500).json({
-                message: "Failed to mark all notifications as read"
-            });
-        }
-
-        res.json({
-            message: "All notifications marked as read"
-        });
-    });
-});
-
-
 // Mark notification as read
 router.put("/:id/read", (req, res) => {
     const { id } = req.params;
@@ -101,27 +79,6 @@ router.put("/:id/read", (req, res) => {
 
         res.json({
             message: "Notification marked as read"
-        });
-    });
-});
-
-
-// Delete all notifications
-router.delete("/", (req, res) => {
-    const sql = `
-        DELETE FROM notifications
-    `;
-
-    db.query(sql, (err) => {
-        if (err) {
-            console.error("Error clearing notifications:", err);
-            return res.status(500).json({
-                message: "Failed to clear notifications"
-            });
-        }
-
-        res.json({
-            message: "All notifications deleted successfully"
         });
     });
 });
